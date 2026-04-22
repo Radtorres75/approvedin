@@ -43,8 +43,8 @@ export default function PublicFooter() {
           </div>
         </div>
         <div className="border-t border-white/10 pt-8">
-          <p className="text-xs text-white/40 leading-relaxed mb-3">
-            ApprovedIn is a technology platform only. We do not provide insurance advice, legal advice, or any professional advice of any kind. We facilitate a pre-screening process that allows vendors to submit compliance documents for association review. ApprovedIn does not verify document authenticity and assumes no liability for vendor work or any outcome of the vendor-client relationship. All vendor approvals are made solely by each association.
+          <p className="text-xs text-white/40 leading-relaxed mb-3">ApprovedIn, LLC. is a technology platform only. We do not provide insurance advice, legal advice, or any professional advice of any kind. We facilitate a pre-screening process that allows vendors to submit compliance documents for association review. ApprovedIn does not verify document authenticity and assumes no liability for vendor work or any outcome of the vendor-client relationship. All vendor approvals are made solely by each association.
+
           </p>
           <p className="text-xs text-white/40">© 2026 ApprovedIn, LLC. All Rights Reserved.
 
