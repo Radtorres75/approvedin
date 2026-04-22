@@ -13,14 +13,27 @@ export default function Contact() {
     e.preventDefault();
     setSending(true); setError("");
     try {
-      await base44.integrations.Core.SendEmail({
-        to: "support@approvedin.com",
-        subject: `Contact Form: ${form.subject}`,
-        body: `Name: ${form.name}\nEmail: ${form.email}\nSubject: ${form.subject}\n\nMessage:\n${form.message}`,
+      // Save to DB first (always works, no external service needed)
+      await base44.entities.ContactSubmission.create({
+        name: form.name,
+        email: form.email,
+        subject: form.subject,
+        message: form.message,
+        status: "pending",
       });
+      // Also attempt to send email — if it fails, submission is still saved
+      try {
+        await base44.integrations.Core.SendEmail({
+          to: "support@approvedin.com",
+          subject: `Contact Form: ${form.subject}`,
+          body: `Name: ${form.name}\nEmail: ${form.email}\nSubject: ${form.subject}\n\nMessage:\n${form.message}`,
+        });
+      } catch {
+        // Email failed but DB record was saved — still show success
+      }
       setSent(true);
     } catch {
-      setError("Failed to send message. Please try again or email us directly at support@approvedin.com");
+      setError("We could not send your message right now. Please email us directly at support@approvedin.com");
     } finally {
       setSending(false);
     }

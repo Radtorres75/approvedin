@@ -65,7 +65,12 @@ export default function ResidentSignup() {
       });
       navigate("/portal/resident/dashboard");
     } catch (err) {
-      setError(err.message || "Registration failed.");
+      const msg = err?.message || err?.error || String(err);
+      if (msg.toLowerCase().includes("already exists") || msg.toLowerCase().includes("already registered") || msg.toLowerCase().includes("duplicate")) {
+        setError("An account with this email already exists. Please log in instead.");
+      } else {
+        setError("We could not create your account. Please check your information and try again.");
+      }
     } finally {
       setLoading(false);
     }
