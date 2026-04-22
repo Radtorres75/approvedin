@@ -32,46 +32,46 @@ export default function Home() {
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              {
-                title: "Associations & Managers",
-                subtitle: "Free for all Florida community associations",
-                desc: "Stop chasing vendor certificates. Build your approved vendor directory with full compliance tracking.",
-                cta: "Create Free Account",
-                link: "/associations",
-                image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=80",
-                badge: "Always Free",
-                badgeColor: "bg-teal/10 text-teal-dark",
-              },
-              {
-                title: "Vendors & Contractors",
-                subtitle: "Beta access — free for 6 months",
-                desc: "Get in front of Florida's associations. Get approved. Get to work. Build your compliance profile once.",
-                cta: "Join as a Vendor",
-                link: "/vendors",
-                image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80",
-                badge: "Beta Free",
-                badgeColor: "bg-amber-50 text-amber-700",
-              },
-              {
-                title: "Residents & Homeowners",
-                subtitle: "Free for all residents",
-                desc: "Find trusted vendors for your home — every vendor in your directory has been reviewed and approved by your association.",
-                cta: "Sign Up Free",
-                link: "/residents",
-                image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&q=80",
-                badge: "Always Free",
-                badgeColor: "bg-teal/10 text-teal-dark",
-              },
-            ].map((card) => (
-              <Link
-                key={card.title}
-                to={card.link}
-                className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl border border-sand-dark transition-all duration-300 hover:-translate-y-1"
-              >
+            {
+              title: "Associations & Managers",
+              subtitle: "Free for all Florida community associations",
+              desc: "Stop chasing vendor certificates. Build your approved vendor directory with full compliance tracking.",
+              cta: "Create Free Account",
+              link: "/associations",
+              image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=80",
+              badge: "Always Free",
+              badgeColor: "bg-teal/10 text-teal-dark"
+            },
+            {
+              title: "Vendors & Contractors",
+              subtitle: "Beta access — free for 6 months",
+              desc: "Get in front of Florida's associations. Get approved. Get to work. Build your compliance profile once.",
+              cta: "Join as a Vendor",
+              link: "/vendors",
+              image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80",
+              badge: "Beta Free",
+              badgeColor: "bg-amber-50 text-amber-700"
+            },
+            {
+              title: "Residents & Homeowners",
+              subtitle: "Free for all residents",
+              desc: "Find trusted vendors for your home — every vendor in your directory has been reviewed and approved by your association.",
+              cta: "Sign Up Free",
+              link: "/residents",
+              image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&q=80",
+              badge: "Always Free",
+              badgeColor: "bg-teal/10 text-teal-dark"
+            }].
+            map((card) =>
+            <Link
+              key={card.title}
+              to={card.link}
+              className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl border border-sand-dark transition-all duration-300 hover:-translate-y-1">
+              
                 <div className="relative h-44 overflow-hidden">
                   <img src={card.image} alt={card.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-navy/60 to-transparent" />
-                  <span className={`absolute top-3 right-3 text-xs font-semibold px-2.5 py-1 rounded-full ${card.badgeColor}`}>
+                  <span className="absolute top-3 right-3 text-xs font-semibold px-2.5 py-1 rounded-full bg-teal/10 text-teal-dark">
                     {card.badge}
                   </span>
                 </div>
@@ -84,7 +84,7 @@ export default function Home() {
                   </div>
                 </div>
               </Link>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -94,16 +94,16 @@ export default function Home() {
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: "🏛️", label: "No cost for associations" },
-              { icon: "🌴", label: "Built for Florida" },
-              { icon: "📋", label: "COIs & licenses on file" },
-              { icon: "🔔", label: "Automated expiration alerts" },
-            ].map((item) => (
-              <div key={item.label} className="flex items-center gap-3">
+            { icon: "🏛️", label: "No cost for associations" },
+            { icon: "🌴", label: "Built for Florida" },
+            { icon: "📋", label: "COIs & licenses on file" },
+            { icon: "🔔", label: "Automated expiration alerts" }].
+            map((item) =>
+            <div key={item.label} className="flex items-center gap-3">
                 <span className="text-2xl">{item.icon}</span>
                 <span className="text-navy font-semibold text-sm">{item.label}</span>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -112,9 +112,9 @@ export default function Home() {
       <section className="py-16 px-4 bg-cream">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-3 gap-3 rounded-2xl overflow-hidden">
-            <img src="https://media.base44.com/images/public/69e9180b18cbe750b3daf184/ce24c413d_generated_image.png" alt="Florida condo" className="col-span-2 h-64 w-full object-cover" />
+            <img src="https://images.unsplash.com/photo-1582407947304-fd86f28f50d8?w=800&q=80" alt="Florida condo" className="col-span-2 h-64 w-full object-cover" />
             <div className="flex flex-col gap-3">
-              <img src="https://media.base44.com/images/public/69e9180b18cbe750b3daf184/6adbc8a27_generated_image.png" alt="HOA community" className="h-[calc(50%-6px)] w-full object-cover" />
+              <img src="https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=400&q=80" alt="HOA community" className="h-[calc(50%-6px)] w-full object-cover" />
               <img src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=400&q=80" alt="Community" className="h-[calc(50%-6px)] w-full object-cover" />
             </div>
           </div>
@@ -128,6 +128,6 @@ export default function Home() {
       </section>
 
       <PublicFooter />
-    </div>
-  );
+    </div>);
+
 }
