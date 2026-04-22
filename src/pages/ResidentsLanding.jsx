@@ -71,7 +71,7 @@ export default function ResidentsLanding() {
       {/* Image Section */}
       <section className="py-16 px-4 bg-cream">
         <div className="max-w-5xl mx-auto grid grid-cols-2 gap-4">
-          <img src="https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=800&q=80" alt="Florida home" className="rounded-2xl h-64 w-full object-cover" />
+          <img src="https://media.base44.com/images/public/69e9180b18cbe750b3daf184/b1ae2e72c_generated_image.png" alt="Florida home" className="rounded-2xl h-64 w-full object-cover" />
           <img src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80" alt="Community" className="rounded-2xl h-64 w-full object-cover" />
         </div>
       </section>
