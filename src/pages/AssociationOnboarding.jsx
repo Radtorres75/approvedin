@@ -30,8 +30,6 @@ export default function AssociationOnboarding() {
         first_name: s1.first_name,
         last_name: s1.last_name,
         role: "association_manager",
-        profile_complete: false,
-        is_active: true,
       });
       const user = await base44.auth.me();
       setUserId(user.id);
@@ -91,7 +89,6 @@ export default function AssociationOnboarding() {
         gl_minimum_coverage: s3.gl_minimum_coverage ? parseFloat(s3.gl_minimum_coverage) : null,
         onboarding_complete: true,
       });
-      await base44.auth.updateMe({ profile_complete: true });
       navigate("/portal/association");
     } catch (err) {
       setError("Failed to complete setup. Please try again.");

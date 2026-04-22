@@ -69,8 +69,6 @@ export default function VendorSetup() {
       await base44.auth.loginViaEmailPassword(creds.email, creds.password);
       await base44.auth.updateMe({
         role: "vendor",
-        profile_complete: false,
-        is_active: true,
       });
       const user = await base44.auth.me();
       const today = new Date().toISOString().split("T")[0];

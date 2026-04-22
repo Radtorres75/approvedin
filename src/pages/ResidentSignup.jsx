@@ -50,8 +50,6 @@ export default function ResidentSignup() {
         first_name: s3.first_name,
         last_name: s3.last_name,
         phone_number: s3.phone_number,
-        profile_complete: true,
-        is_active: true,
       });
       const user = await base44.auth.me();
       await base44.entities.Resident.create({
