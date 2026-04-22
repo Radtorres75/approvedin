@@ -114,7 +114,7 @@ export default function Home() {
           <div className="grid grid-cols-3 gap-3 rounded-2xl overflow-hidden">
             <img src="https://images.unsplash.com/photo-1582407947304-fd86f28f50d8?w=800&q=80" alt="Florida condo" className="col-span-2 h-64 w-full object-cover" />
             <div className="flex flex-col gap-3">
-              <img src="https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=400&q=80" alt="HOA community" className="h-[calc(50%-6px)] w-full object-cover" />
+              <img src="https://media.base44.com/images/public/69e9180b18cbe750b3daf184/ffabde2a5_generated_image.png" alt="HOA community" className="h-[calc(50%-6px)] w-full object-cover" />
               <img src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=400&q=80" alt="Community" className="h-[calc(50%-6px)] w-full object-cover" />
             </div>
           </div>
