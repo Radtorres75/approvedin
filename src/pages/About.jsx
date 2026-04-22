@@ -37,7 +37,7 @@ export default function About() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <img src="https://images.unsplash.com/photo-1582407947304-fd86f28f50d8?w=800&q=80" alt="Florida community" className="rounded-2xl h-48 w-full object-cover" />
+            <img src="https://media.base44.com/images/public/69e9180b18cbe750b3daf184/2af3399cd_generated_image.png" alt="Florida community" className="rounded-2xl h-48 w-full object-cover" />
             <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80" alt="HOA community" className="rounded-2xl h-48 w-full object-cover" />
           </div>
 
