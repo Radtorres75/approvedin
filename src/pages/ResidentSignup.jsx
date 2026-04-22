@@ -43,7 +43,9 @@ export default function ResidentSignup() {
     if (!s3.tos) { setError("Please accept the Terms of Service."); return; }
     setLoading(true); setError("");
     try {
-      await base44.auth.register(s3.email, s3.password, {
+      await base44.auth.register({ email: s3.email, password: s3.password });
+      await base44.auth.loginViaEmailPassword(s3.email, s3.password);
+      await base44.auth.updateMe({
         role: "resident",
         first_name: s3.first_name,
         last_name: s3.last_name,
@@ -65,11 +67,16 @@ export default function ResidentSignup() {
       });
       navigate("/portal/resident/dashboard");
     } catch (err) {
-      const msg = err?.message || err?.error || String(err);
-      if (msg.toLowerCase().includes("already exists") || msg.toLowerCase().includes("already registered") || msg.toLowerCase().includes("duplicate")) {
-        setError("An account with this email already exists. Please log in instead.");
+      console.error("Account creation error:", err);
+      const msg = err?.message || err?.error || err?.toString() || "";
+      if (msg.toLowerCase().includes("already exists") || msg.toLowerCase().includes("already registered") || msg.toLowerCase().includes("duplicate") || msg.toLowerCase().includes("email")) {
+        setError("An account with this email address already exists. Please log in instead.");
+      } else if (msg.toLowerCase().includes("password")) {
+        setError("Your password must be at least 8 characters.");
+      } else if (msg) {
+        setError(msg);
       } else {
-        setError("We could not create your account. Please check your information and try again.");
+        setError("Something went wrong on our end. Please try again in a moment.");
       }
     } finally {
       setLoading(false);
@@ -105,7 +112,14 @@ export default function ResidentSignup() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-sand-dark p-8">
-            {error && <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">{error}</div>}
+            {error && (
+              <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
+                {error}
+                {error.includes("already exists") && (
+                  <a href="/signin" className="block mt-2 underline font-semibold text-red-700 hover:text-red-900">Log In →</a>
+                )}
+              </div>
+            )}
 
             {step === 1 && (
               <div className="space-y-4">
