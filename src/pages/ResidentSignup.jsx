@@ -69,10 +69,13 @@ export default function ResidentSignup() {
     } catch (err) {
       console.error("Account creation error:", err);
       const msg = err?.message || err?.error || err?.toString() || "";
-      if (msg.toLowerCase().includes("already exists") || msg.toLowerCase().includes("already registered") || msg.toLowerCase().includes("duplicate") || msg.toLowerCase().includes("email")) {
+      const lower = msg.toLowerCase();
+      if (lower.includes("already exists") || lower.includes("already registered") || lower.includes("duplicate")) {
         setError("An account with this email address already exists. Please log in instead.");
-      } else if (msg.toLowerCase().includes("password")) {
+      } else if (lower.includes("password") && lower.includes("short")) {
         setError("Your password must be at least 8 characters.");
+      } else if (lower.includes("user_not_registered") || lower.includes("not registered")) {
+        setError("Registration is currently restricted. Please contact support at support@approvedin.com");
       } else if (msg) {
         setError(msg);
       } else {
