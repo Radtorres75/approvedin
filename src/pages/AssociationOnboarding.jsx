@@ -117,7 +117,6 @@ export default function AssociationOnboarding() {
                 email={pendingEmail}
                 onVerified={async () => {
                   try {
-                    await base44.auth.loginViaEmailPassword(s1.email, s1.password);
                     await base44.auth.updateMe({ first_name: s1.first_name, last_name: s1.last_name, role: "association_manager" });
                     const user = await base44.auth.me();
                     setUserId(user.id);
@@ -126,6 +125,7 @@ export default function AssociationOnboarding() {
                     setPendingEmail(null);
                     setStep(2);
                   } catch (err) {
+                    console.error("Post-verification setup error:", err);
                     setError("Account verified but setup failed. Please log in and try again.");
                     setPendingEmail(null);
                   }

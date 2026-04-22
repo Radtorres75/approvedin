@@ -282,7 +282,6 @@ export default function VendorSetup() {
                 email={pendingEmail}
                 onVerified={async () => {
                   try {
-                    await base44.auth.loginViaEmailPassword(creds.email, creds.password);
                     await base44.auth.updateMe({ role: "vendor" });
                     const user = await base44.auth.me();
                     const today = new Date().toISOString().split("T")[0];
