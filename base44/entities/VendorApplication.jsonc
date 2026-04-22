@@ -1,0 +1,42 @@
+{
+  "name": "VendorApplication",
+  "type": "object",
+  "properties": {
+    "vendor_id": {
+      "type": "string",
+      "description": "FK to Vendor"
+    },
+    "association_id": {
+      "type": "string",
+      "description": "FK to Association"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "submitted",
+        "under_review",
+        "approved",
+        "rejected"
+      ],
+      "default": "submitted"
+    },
+    "applied_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "reviewed_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "reviewed_by_user_id": {
+      "type": "string"
+    },
+    "rejection_reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "vendor_id",
+    "association_id"
+  ]
+}

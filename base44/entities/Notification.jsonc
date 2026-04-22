@@ -1,0 +1,51 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "FK to User - recipient"
+    },
+    "notification_type": {
+      "type": "string",
+      "enum": [
+        "document_expiring",
+        "document_expired",
+        "vendor_approved",
+        "vendor_rejected",
+        "vendor_suspended",
+        "vendor_reactivated",
+        "application_received",
+        "application_approved",
+        "application_rejected",
+        "invitation_sent",
+        "general"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "related_entity_type": {
+      "type": "string"
+    },
+    "related_entity_id": {
+      "type": "string"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    },
+    "action_url": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "notification_type",
+    "title",
+    "message"
+  ]
+}

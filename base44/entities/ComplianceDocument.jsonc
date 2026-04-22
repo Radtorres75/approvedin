@@ -1,0 +1,152 @@
+{
+  "name": "ComplianceDocument",
+  "type": "object",
+  "properties": {
+    "vendor_id": {
+      "type": "string",
+      "description": "FK to Vendor"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "coi",
+        "trade_license",
+        "workers_comp",
+        "sunbiz"
+      ]
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "file_name": {
+      "type": "string"
+    },
+    "upload_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "uploaded_by_user_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "expiring_soon",
+        "expired",
+        "pending_review",
+        "archived"
+      ],
+      "default": "pending_review"
+    },
+    "expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "issuing_authority": {
+      "type": "string"
+    },
+    "license_number": {
+      "type": "string"
+    },
+    "is_archived": {
+      "type": "boolean",
+      "default": false
+    },
+    "archived_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "version_number": {
+      "type": "number",
+      "default": 1
+    },
+    "reminder_90_sent": {
+      "type": "boolean",
+      "default": false
+    },
+    "reminder_60_sent": {
+      "type": "boolean",
+      "default": false
+    },
+    "reminder_30_sent": {
+      "type": "boolean",
+      "default": false
+    },
+    "reminder_7_sent": {
+      "type": "boolean",
+      "default": false
+    },
+    "reminder_expired_sent": {
+      "type": "boolean",
+      "default": false
+    },
+    "gl_expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "gl_coverage_limit": {
+      "type": "number"
+    },
+    "gl_status": {
+      "type": "string"
+    },
+    "auto_expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "auto_do_not_carry": {
+      "type": "boolean",
+      "default": false
+    },
+    "auto_hold_harmless": {
+      "type": "boolean",
+      "default": false
+    },
+    "auto_status": {
+      "type": "string"
+    },
+    "umbrella_expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "umbrella_do_not_carry": {
+      "type": "boolean",
+      "default": false
+    },
+    "umbrella_hold_harmless": {
+      "type": "boolean",
+      "default": false
+    },
+    "umbrella_status": {
+      "type": "string"
+    },
+    "professional_expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "professional_do_not_carry": {
+      "type": "boolean",
+      "default": false
+    },
+    "professional_hold_harmless": {
+      "type": "boolean",
+      "default": false
+    },
+    "professional_status": {
+      "type": "string"
+    },
+    "workers_comp_option": {
+      "type": "string",
+      "enum": [
+        "policy_uploaded",
+        "hold_harmless",
+        "do_not_carry"
+      ]
+    }
+  },
+  "required": [
+    "vendor_id",
+    "document_type"
+  ]
+}

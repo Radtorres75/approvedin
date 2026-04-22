@@ -1,0 +1,48 @@
+{
+  "name": "Resident",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "FK to User"
+    },
+    "association_id": {
+      "type": "string",
+      "description": "FK to Association"
+    },
+    "first_name": {
+      "type": "string"
+    },
+    "last_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone_number": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "unit_number": {
+      "type": "string"
+    },
+    "resident_type": {
+      "type": "string",
+      "enum": [
+        "owner",
+        "tenant"
+      ]
+    }
+  },
+  "required": [
+    "user_id",
+    "association_id",
+    "first_name",
+    "last_name",
+    "email",
+    "unit_number",
+    "resident_type"
+  ]
+}
