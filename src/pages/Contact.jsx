@@ -21,12 +21,13 @@ export default function Contact() {
         message: form.message,
         status: "pending",
       });
-      // Also attempt to send email — if it fails, submission is still saved
+      // Send email via Resend backend function
       try {
-        await base44.integrations.Core.SendEmail({
-          to: "support@approvedin.com",
-          subject: `Contact Form: ${form.subject}`,
-          body: `Name: ${form.name}\nEmail: ${form.email}\nSubject: ${form.subject}\n\nMessage:\n${form.message}`,
+        await base44.functions.invoke("sendContactEmail", {
+          name: form.name,
+          email: form.email,
+          subject: form.subject,
+          message: form.message,
         });
       } catch {
         // Email failed but DB record was saved — still show success
