@@ -113,7 +113,7 @@ export default function ResidentSignup() {
                       address: s3.address, unit_number: s2.unit_number,
                       resident_type: s2.resident_type,
                     });
-                    navigate("/portal/resident/dashboard");
+                    window.location.href = "/portal/resident/dashboard";
                   } catch (err) {
                     setError("Verified but setup failed. Please try logging in.");
                     setPendingVerification(false);

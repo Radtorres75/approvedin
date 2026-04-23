@@ -77,7 +77,7 @@ export default function AssociationOnboarding() {
         gl_minimum_coverage: s3.gl_minimum_coverage ? parseFloat(s3.gl_minimum_coverage) : null,
         onboarding_complete: true,
       });
-      navigate("/portal/association");
+      window.location.href = "/portal/association";
     } catch (err) {
       setError("Failed to complete setup. Please try again.");
     } finally {

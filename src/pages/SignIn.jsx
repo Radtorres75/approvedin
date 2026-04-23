@@ -21,10 +21,10 @@ export default function SignIn() {
     try {
       await base44.auth.loginViaEmailPassword(email, password);
       const user = await base44.auth.me();
-      if (user.role === "association_manager") navigate("/portal/association");
-      else if (user.role === "vendor") navigate("/portal/vendor");
-      else if (user.role === "resident") navigate("/portal/resident/dashboard");
-      else navigate("/");
+      if (user.role === "association_manager") window.location.href = "/portal/association";
+      else if (user.role === "vendor") window.location.href = "/portal/vendor";
+      else if (user.role === "resident") window.location.href = "/portal/resident/dashboard";
+      else window.location.href = "/";
     } catch (err) {
       console.error("Login error:", err);
       const msg = err?.message || err?.error || err?.toString() || "";

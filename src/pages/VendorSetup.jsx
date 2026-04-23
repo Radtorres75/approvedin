@@ -42,7 +42,7 @@ export default function VendorSetup() {
             const resumeStep = (v.setup_highest_completed_step || 0) + 1;
             setStep(Math.min(resumeStep, TOTAL_STEPS));
             if (v.setup_highest_completed_step >= TOTAL_STEPS) {
-              navigate("/portal/vendor");
+              window.location.href = "/portal/vendor";
               return;
             }
           } else {
@@ -246,7 +246,7 @@ export default function VendorSetup() {
         setup_current_step: TOTAL_STEPS,
       });
       await base44.functions.invoke("recalculateProfileCompletion", { vendor_id: vendorId });
-      navigate("/portal/vendor");
+      window.location.href = "/portal/vendor";
     } catch { setError("Failed to complete."); } finally { setLoading(false); }
   };
 
