@@ -62,23 +62,23 @@ export default function ResidentSignup() {
     setLoading(true); setError("");
     try {
       // 1. Register
-      const registered = await base44.auth.register({
+      await base44.auth.register({
         email: s3.email,
         password: s3.password,
         first_name: s3.first_name,
         last_name: s3.last_name,
         role: "resident",
       });
-      // 2. Get user ID from register result or fallback to login
-      let userId = registered?.id || registered?.user?.id;
-      if (!userId) {
-        await base44.auth.loginViaEmailPassword(s3.email, s3.password);
-        const user = await base44.auth.me();
-        userId = user.id;
-      }
-      // 3. Create Resident record immediately using userId
+      // 2. Login to establish session
+      await base44.auth.loginViaEmailPassword(s3.email, s3.password);
+      // 3. Fetch user — short delay to ensure session is ready
+      await new Promise(r => setTimeout(r, 300));
+      const user = await base44.auth.me();
+      console.log("USER AFTER REGISTER:", user);
+      if (!user || !user.id) throw new Error("Account created but session could not be established. Please log in.");
+      // 4. Create Resident record
       await base44.entities.Resident.create({
-        user_id: userId,
+        user_id: user.id,
         association_id: selectedAssoc.id,
         first_name: s3.first_name,
         last_name: s3.last_name,
@@ -88,10 +88,6 @@ export default function ResidentSignup() {
         unit_number: s2.unit_number,
         resident_type: s2.resident_type,
       });
-      // 4. Now login to establish session
-      try {
-        await base44.auth.loginViaEmailPassword(s3.email, s3.password);
-      } catch {}
       window.location.href = "/portal/resident/dashboard";
     } catch (err) {
       console.error("Resident signup error:", err);
