@@ -69,7 +69,7 @@ export default function VendorSetup() {
     e.preventDefault();
     setLoading(true); setError("");
     try {
-      await base44.auth.register({ email: creds.email, password: creds.password });
+      await base44.auth.register({ email: creds.email, password: creds.password, role: "vendor" });
       // Show OTP verification screen
       setPendingEmail(creds.email);
       setPendingVerification(true);
@@ -294,8 +294,8 @@ export default function VendorSetup() {
                     return;
                   }
                   try {
-                    // Step 2: Update user profile
-                    await base44.auth.updateMe({ role: "vendor", is_active: true, profile_complete: false });
+                    // Step 2: Update user profile (role already set at register)
+                    await base44.auth.updateMe({ is_active: true, profile_complete: false });
                     const user = await base44.auth.me();
                     // Step 3: Create vendor record
                     const today = new Date().toISOString().split("T")[0];

@@ -46,7 +46,7 @@ export default function ResidentSignup() {
     if (!s3.tos) { setError("Please accept the Terms of Service."); return; }
     setLoading(true); setError("");
     try {
-      await base44.auth.register({ email: s3.email, password: s3.password });
+      await base44.auth.register({ email: s3.email, password: s3.password, role: "resident", first_name: s3.first_name, last_name: s3.last_name });
       // Show OTP verification screen
       setPendingVerification(true);
     } catch (err) {
@@ -111,8 +111,8 @@ export default function ResidentSignup() {
                     return;
                   }
                   try {
-                    // Step 2: Update user profile
-                    await base44.auth.updateMe({ role: "resident", first_name: s3.first_name, last_name: s3.last_name, phone_number: s3.phone_number, is_active: true, profile_complete: false });
+                    // Step 2: Update user profile (role/name already set at register)
+                    await base44.auth.updateMe({ phone_number: s3.phone_number, is_active: true, profile_complete: false });
                     const user = await base44.auth.me();
                     // Step 3: Create resident record
                     await base44.entities.Resident.create({

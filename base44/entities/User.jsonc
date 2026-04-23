@@ -33,9 +33,5 @@
       "format": "date-time"
     }
   },
-  "required": [
-    "role",
-    "first_name",
-    "last_name"
-  ]
+  "required": []
 }

@@ -27,7 +27,7 @@ export default function AssociationOnboarding() {
     if (!s1.tos) { setError("Please accept the Terms of Service."); return; }
     setLoading(true); setError("");
     try {
-      await base44.auth.register({ email: s1.email, password: s1.password });
+      await base44.auth.register({ email: s1.email, password: s1.password, role: "association_manager", first_name: s1.first_name, last_name: s1.last_name });
       // Show OTP verification screen
       setPendingVerification(true);
     } catch (err) {
@@ -127,8 +127,8 @@ export default function AssociationOnboarding() {
                     return;
                   }
                   try {
-                    // Step 2: Update user profile
-                    await base44.auth.updateMe({ first_name: s1.first_name, last_name: s1.last_name, role: "association_manager", is_active: true, profile_complete: false });
+                    // Step 2: Update user profile (role already set at register)
+                    await base44.auth.updateMe({ first_name: s1.first_name, last_name: s1.last_name, is_active: true, profile_complete: false });
                     const user = await base44.auth.me();
                     setUserId(user.id);
                     // Step 3: Create association record
