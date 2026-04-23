@@ -286,9 +286,18 @@ export default function VendorSetup() {
                 email={pendingEmail}
                 onVerified={async () => {
                   try {
+                    // Step 1: Login
                     await base44.auth.loginViaEmailPassword(pendingEmail, creds.password);
+                  } catch (err) {
+                    setError("Email verified but login failed. Please go to Log In and sign in with your email and password.");
+                    setPendingVerification(false);
+                    return;
+                  }
+                  try {
+                    // Step 2: Update user profile
                     await base44.auth.updateMe({ role: "vendor", is_active: true, profile_complete: false });
                     const user = await base44.auth.me();
+                    // Step 3: Create vendor record
                     const today = new Date().toISOString().split("T")[0];
                     const v = await base44.entities.Vendor.create({
                       user_id: user.id, business_name: "", subscription_tier: "beta",
@@ -302,7 +311,8 @@ export default function VendorSetup() {
                     setPendingVerification(false);
                     setStep(1);
                   } catch (err) {
-                    setError("Verified but setup failed. Please try logging in.");
+                    console.error("Post-login setup error:", err);
+                    setError("Your account was created but we could not finish setting it up. Please log in and we will complete your setup automatically.");
                     setPendingVerification(false);
                   }
                 }}
@@ -312,7 +322,7 @@ export default function VendorSetup() {
             {error && (
               <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
                 {error}
-                {error.includes("already exists") && (
+                {(error.includes("already exists") || error.includes("could not finish")) && (
                   <a href="/signin" className="block mt-2 underline font-semibold text-red-700 hover:text-red-900">Log In →</a>
                 )}
               </div>

@@ -21,14 +21,33 @@ export default function SignIn() {
     try {
       await base44.auth.loginViaEmailPassword(email, password);
       const user = await base44.auth.me();
+
+      // Auto-recover: if role is missing (setup failed previously), send to correct signup flow
+      if (!user.role || user.role === "admin") {
+        window.location.href = "/";
+        return;
+      }
+
       if (user.role === "association_manager") {
         const assocs = await base44.entities.Association.filter({ user_id: user.id });
         const assoc = assocs[0];
-        window.location.href = (assoc?.onboarding_complete) ? "/portal/association" : "/onboarding";
+        // If no association record exists yet, ensure profile is set and restart onboarding
+        if (!assoc) {
+          await base44.auth.updateMe({ is_active: true });
+          window.location.href = "/onboarding";
+          return;
+        }
+        window.location.href = assoc.onboarding_complete ? "/portal/association" : "/onboarding";
       } else if (user.role === "vendor") {
         const vendors = await base44.entities.Vendor.filter({ user_id: user.id });
         const vendor = vendors[0];
-        window.location.href = (vendor?.setup_highest_completed_step >= 8) ? "/portal/vendor" : "/portal/vendor/setup";
+        // If no vendor record exists yet, restart setup
+        if (!vendor) {
+          await base44.auth.updateMe({ is_active: true });
+          window.location.href = "/portal/vendor/setup";
+          return;
+        }
+        window.location.href = (vendor.setup_highest_completed_step >= 8) ? "/portal/vendor" : "/portal/vendor/setup";
       } else if (user.role === "resident") {
         window.location.href = "/portal/resident/dashboard";
       } else {

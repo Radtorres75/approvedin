@@ -103,9 +103,18 @@ export default function ResidentSignup() {
                 email={s3.email}
                 onVerified={async () => {
                   try {
+                    // Step 1: Login
                     await base44.auth.loginViaEmailPassword(s3.email, s3.password);
+                  } catch (err) {
+                    setError("Email verified but login failed. Please go to Log In and sign in with your email and password.");
+                    setPendingVerification(false);
+                    return;
+                  }
+                  try {
+                    // Step 2: Update user profile
                     await base44.auth.updateMe({ role: "resident", first_name: s3.first_name, last_name: s3.last_name, phone_number: s3.phone_number, is_active: true, profile_complete: false });
                     const user = await base44.auth.me();
+                    // Step 3: Create resident record
                     await base44.entities.Resident.create({
                       user_id: user.id, association_id: selectedAssoc.id,
                       first_name: s3.first_name, last_name: s3.last_name,
@@ -115,7 +124,8 @@ export default function ResidentSignup() {
                     });
                     window.location.href = "/portal/resident/dashboard";
                   } catch (err) {
-                    setError("Verified but setup failed. Please try logging in.");
+                    console.error("Post-login setup error:", err);
+                    setError("Your account was created but we could not finish setting it up. Please log in and we will complete your setup automatically.");
                     setPendingVerification(false);
                   }
                 }}
@@ -125,7 +135,7 @@ export default function ResidentSignup() {
             {error && (
               <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
                 {error}
-                {error.includes("already exists") && (
+                {(error.includes("already exists") || error.includes("could not finish")) && (
                   <a href="/signin" className="block mt-2 underline font-semibold text-red-700 hover:text-red-900">Log In →</a>
                 )}
               </div>
