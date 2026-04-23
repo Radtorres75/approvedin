@@ -31,9 +31,7 @@ export default function SignIn() {
       if (user.role === "association_manager") {
         const assocs = await base44.entities.Association.filter({ user_id: user.id });
         const assoc = assocs[0];
-        // If no association record exists yet, ensure profile is set and restart onboarding
         if (!assoc) {
-          await base44.auth.updateMe({ is_active: true });
           window.location.href = "/onboarding";
           return;
         }

@@ -21,6 +21,7 @@ import Terms from './pages/Terms';
 
 // Onboarding & signup
 import AssociationOnboarding from './pages/AssociationOnboarding';
+import FixMyRole from './pages/FixMyRole';
 import VendorSetup from './pages/VendorSetup';
 import ResidentSignup from './pages/ResidentSignup';
 
@@ -82,6 +83,7 @@ const AuthenticatedApp = () => {
       <Route path="/onboarding" element={<AssociationOnboarding />} />
       <Route path="/portal/vendor/setup" element={<VendorSetup />} />
       <Route path="/resident/signup" element={<ResidentSignup />} />
+      <Route path="/fix-role" element={<FixMyRole />} />
 
       {/* Association portal */}
       <Route path="/portal/association" element={<AssociationPortal />} />
