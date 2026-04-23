@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { FLORIDA_COUNTIES, TRADE_CATEGORIES } from "@/lib/constants";
 import { ChevronRight, CheckCircle, Upload, X } from "lucide-react";
-import OtpVerification from "@/components/auth/OtpVerification";
 
 const STEP_LABELS = ["Credentials", "Business Info", "Categories", "Logo", "COI", "Trade License", "Workers Comp", "Sunbiz", "Review"];
 const TOTAL_STEPS = 8;
@@ -15,7 +14,7 @@ export default function VendorSetup() {
   const [loading, setLoading] = useState(false);
   const [initLoading, setInitLoading] = useState(true);
   const [error, setError] = useState("");
-  const [pendingEmail, setPendingEmail] = useState(null);
+
   const navigate = useNavigate();
 
   const [creds, setCreds] = useState({ email: "", password: "" });
@@ -68,7 +67,20 @@ export default function VendorSetup() {
     setLoading(true); setError("");
     try {
       await base44.auth.register({ email: creds.email, password: creds.password });
-      setPendingEmail(creds.email);
+      // Log in immediately after registration
+      await base44.auth.updateMe({ role: "vendor" });
+      const user = await base44.auth.me();
+      const today = new Date().toISOString().split("T")[0];
+      const v = await base44.entities.Vendor.create({
+        user_id: user.id, business_name: "", subscription_tier: "beta",
+        beta_signup_date: today, setup_current_step: 1,
+        setup_highest_completed_step: 0, profile_completion_percentage: 0,
+        overall_compliance_status: "noncompliant", is_suspended: false,
+      });
+      setVendorId(v.id);
+      setVendor(v);
+      setInitLoading(false);
+      setStep(1);
     } catch (err) {
       console.error("Account creation error:", err);
       const msg = err?.message || err?.error || err?.toString() || "";
@@ -277,32 +289,6 @@ export default function VendorSetup() {
           )}
 
           <div className="bg-white rounded-2xl shadow-sm border border-sand-dark p-8">
-            {pendingEmail ? (
-              <OtpVerification
-                email={pendingEmail}
-                onVerified={async () => {
-                  try {
-                    await base44.auth.updateMe({ role: "vendor" });
-                    const user = await base44.auth.me();
-                    const today = new Date().toISOString().split("T")[0];
-                    const v = await base44.entities.Vendor.create({
-                      user_id: user.id, business_name: "", subscription_tier: "beta",
-                      beta_signup_date: today, setup_current_step: 1,
-                      setup_highest_completed_step: 0, profile_completion_percentage: 0,
-                      overall_compliance_status: "noncompliant", is_suspended: false,
-                    });
-                    setVendorId(v.id);
-                    setVendor(v);
-                    setInitLoading(false);
-                    setPendingEmail(null);
-                    setStep(1);
-                  } catch (err) {
-                    setError("Account verified but setup failed. Please log in and try again.");
-                    setPendingEmail(null);
-                  }
-                }}
-              />
-            ) : (<>
             {error && (
               <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
                 {error}
@@ -503,7 +489,6 @@ export default function VendorSetup() {
                 </button>
               </div>
             )}
-            </>)}
           </div>
         </div>
       </div>
