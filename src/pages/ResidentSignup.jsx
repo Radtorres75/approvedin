@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { CheckCircle, ChevronRight, Search } from "lucide-react";
-import EmailVerification from "@/components/auth/EmailVerification";
+import { CheckCircle, ChevronRight, Search, Eye, EyeOff } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const STEPS = ["Find Community", "Your Unit", "Create Account"];
 
@@ -10,18 +9,16 @@ export default function ResidentSignup() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [pendingVerification, setPendingVerification] = useState(false);
-  const navigate = useNavigate();
+  const [showPw, setShowPw] = useState(false);
+  const [showPw2, setShowPw2] = useState(false);
 
   const [associations, setAssociations] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAssoc, setSelectedAssoc] = useState(null);
   const [s2, setS2] = useState({ unit_number: "", resident_type: "" });
-  const [s3, setS3] = useState({ first_name: "", last_name: "", email: "", phone_number: "", address: "", password: "", tos: false });
-
+  const [s3, setS3] = useState({ first_name: "", last_name: "", email: "", phone_number: "", address: "", password: "", confirm_password: "", tos: false });
 
   useEffect(() => {
-    // Check for pre-filled association from URL
     const params = new URLSearchParams(window.location.search);
     const assocId = params.get("association");
     const load = async () => {
@@ -41,29 +38,59 @@ export default function ResidentSignup() {
     a.florida_county?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleStep3 = async (e) => {
+  const parseError = (err) => {
+    const msg = err?.message || err?.error || err?.toString() || "";
+    const lower = msg.toLowerCase();
+    if (lower.includes("already exists") || lower.includes("already registered") || lower.includes("duplicate") || lower.includes("email_exists")) {
+      return { text: "An account with this email already exists. Please log in instead.", showLogin: true };
+    }
+    if (lower.includes("password") && (lower.includes("short") || lower.includes("weak") || lower.includes("length"))) {
+      return { text: "Your password must be at least 8 characters." };
+    }
+    if (lower.includes("network") || lower.includes("fetch") || lower.includes("connection")) {
+      return { text: "Connection error. Please check your internet and try again." };
+    }
+    if (msg && !lower.includes("object object")) return { text: msg };
+    return { text: "Something went wrong. Please try again or contact support@approvedin.com" };
+  };
+
+  const handleCreateAccount = async (e) => {
     e.preventDefault();
     if (!s3.tos) { setError("Please accept the Terms of Service."); return; }
+    if (s3.password.length < 8) { setError("Your password must be at least 8 characters."); return; }
+    if (s3.password !== s3.confirm_password) { setError("Passwords do not match."); return; }
     setLoading(true); setError("");
     try {
-      await base44.auth.register({ email: s3.email, password: s3.password, role: "resident", first_name: s3.first_name, last_name: s3.last_name });
-      // Show OTP verification screen
-      setPendingVerification(true);
+      // 1. Register
+      await base44.auth.register({
+        email: s3.email,
+        password: s3.password,
+        first_name: s3.first_name,
+        last_name: s3.last_name,
+        role: "resident",
+      });
+      // 2. Login immediately
+      await base44.auth.loginViaEmailPassword(s3.email, s3.password);
+      // 3. Update profile fields
+      await base44.auth.updateMe({ phone_number: s3.phone_number, is_active: true, profile_complete: false });
+      // 4. Get user and create Resident record
+      const user = await base44.auth.me();
+      await base44.entities.Resident.create({
+        user_id: user.id,
+        association_id: selectedAssoc.id,
+        first_name: s3.first_name,
+        last_name: s3.last_name,
+        email: s3.email,
+        phone_number: s3.phone_number,
+        address: s3.address,
+        unit_number: s2.unit_number,
+        resident_type: s2.resident_type,
+      });
+      window.location.href = "/portal/resident/dashboard";
     } catch (err) {
-      console.error("Account creation error:", err);
-      const msg = err?.message || err?.error || err?.toString() || "";
-      const lower = msg.toLowerCase();
-      if (lower.includes("already exists") || lower.includes("already registered") || lower.includes("duplicate")) {
-        setError("An account with this email address already exists. Please log in instead.");
-      } else if (lower.includes("password") && lower.includes("short")) {
-        setError("Your password must be at least 8 characters.");
-      } else if (lower.includes("user_not_registered") || lower.includes("not registered")) {
-        setError("Registration is currently restricted. Please contact support at support@approvedin.com");
-      } else if (msg) {
-        setError(msg);
-      } else {
-        setError("Something went wrong on our end. Please try again in a moment.");
-      }
+      console.error("Resident signup error:", err);
+      const parsed = parseError(err);
+      setError(parsed.text);
     } finally {
       setLoading(false);
     }
@@ -72,17 +99,16 @@ export default function ResidentSignup() {
   return (
     <div className="min-h-screen bg-cream flex flex-col">
       <nav className="bg-navy py-4 px-6">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-teal flex items-center justify-center">
             <span className="text-navy font-black text-xs">A</span>
           </div>
           <span className="text-white font-bold text-base">ApprovedIn</span>
-        </div>
+        </Link>
       </nav>
 
       <div className="flex-1 flex items-start justify-center px-4 py-12">
         <div className="w-full max-w-lg">
-          {/* Progress */}
           <div className="flex items-center gap-2 mb-8 justify-center">
             {STEPS.map((s, i) => (
               <React.Fragment key={s}>
@@ -98,49 +124,16 @@ export default function ResidentSignup() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-sand-dark p-8">
-            {pendingVerification ? (
-              <EmailVerification
-                email={s3.email}
-                onVerified={async () => {
-                  try {
-                    // Step 1: Login
-                    await base44.auth.loginViaEmailPassword(s3.email, s3.password);
-                  } catch (err) {
-                    setError("Email verified but login failed. Please go to Log In and sign in with your email and password.");
-                    setPendingVerification(false);
-                    return;
-                  }
-                  try {
-                    // Step 2: Update user profile (role/name already set at register)
-                    await base44.auth.updateMe({ phone_number: s3.phone_number, is_active: true, profile_complete: false });
-                    const user = await base44.auth.me();
-                    // Step 3: Create resident record
-                    await base44.entities.Resident.create({
-                      user_id: user.id, association_id: selectedAssoc.id,
-                      first_name: s3.first_name, last_name: s3.last_name,
-                      email: s3.email, phone_number: s3.phone_number,
-                      address: s3.address, unit_number: s2.unit_number,
-                      resident_type: s2.resident_type,
-                    });
-                    window.location.href = "/portal/resident/dashboard";
-                  } catch (err) {
-                    console.error("Post-login setup error:", err);
-                    setError("Your account was created but we could not finish setting it up. Please log in and we will complete your setup automatically.");
-                    setPendingVerification(false);
-                  }
-                }}
-              />
-            ) : (
-            <>
             {error && (
               <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
                 {error}
-                {(error.includes("already exists") || error.includes("could not finish")) && (
+                {(error.includes("already exists") || error.includes("log in")) && (
                   <a href="/signin" className="block mt-2 underline font-semibold text-red-700 hover:text-red-900">Log In →</a>
                 )}
               </div>
             )}
 
+            {/* STEP 1: Find Community */}
             {step === 1 && (
               <div className="space-y-4">
                 <div className="mb-4">
@@ -173,6 +166,7 @@ export default function ResidentSignup() {
               </div>
             )}
 
+            {/* STEP 2: Your Unit */}
             {step === 2 && (
               <div className="space-y-5">
                 <div>
@@ -203,8 +197,9 @@ export default function ResidentSignup() {
               </div>
             )}
 
+            {/* STEP 3: Create Account */}
             {step === 3 && (
-              <form onSubmit={handleStep3} className="space-y-4">
+              <form onSubmit={handleCreateAccount} className="space-y-4">
                 <h2 className="text-2xl font-black text-navy mb-4">Create your account</h2>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="First name *" value={s3.first_name} onChange={v => setS3({...s3, first_name: v})} required />
@@ -213,7 +208,18 @@ export default function ResidentSignup() {
                 <Field label="Email *" type="email" value={s3.email} onChange={v => setS3({...s3, email: v})} required />
                 <Field label="Phone number *" value={s3.phone_number} onChange={v => setS3({...s3, phone_number: v})} required />
                 <Field label="Address *" value={s3.address} onChange={v => setS3({...s3, address: v})} required />
-                <Field label="Password *" type="password" value={s3.password} onChange={v => setS3({...s3, password: v})} required />
+                <div className="relative">
+                  <Field label="Password * (min 8 characters)" type={showPw ? "text" : "password"} value={s3.password} onChange={v => setS3({...s3, password: v})} required />
+                  <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-8 text-body-brown hover:text-navy">
+                    {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                <div className="relative">
+                  <Field label="Confirm password *" type={showPw2 ? "text" : "password"} value={s3.confirm_password} onChange={v => setS3({...s3, confirm_password: v})} required />
+                  <button type="button" onClick={() => setShowPw2(!showPw2)} className="absolute right-3 top-8 text-body-brown hover:text-navy">
+                    {showPw2 ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input type="checkbox" checked={s3.tos} onChange={e => setS3({...s3, tos: e.target.checked})} className="mt-0.5 accent-teal" required />
                   <span className="text-sm text-body-brown">I agree to the <a href="/terms" className="text-teal-dark underline" target="_blank">Terms of Service</a> and <a href="/privacy" className="text-teal-dark underline" target="_blank">Privacy Policy</a></span>
@@ -221,9 +227,10 @@ export default function ResidentSignup() {
                 <button type="submit" disabled={loading} className="w-full bg-navy hover:bg-navy-mid text-white font-bold py-3 rounded-xl text-sm disabled:opacity-60 flex items-center justify-center gap-2">
                   {loading ? "Creating account..." : <>Complete Signup <ChevronRight size={16} /></>}
                 </button>
+                <p className="text-center text-body-brown text-xs pt-1">
+                  Already have an account? <Link to="/signin" className="text-teal-dark font-semibold hover:underline">Log In</Link>
+                </p>
               </form>
-            )}
-            </>
             )}
           </div>
         </div>

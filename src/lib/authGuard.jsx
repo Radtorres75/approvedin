@@ -11,22 +11,21 @@ export function useRoleGuard(allowedRole) {
     const check = async () => {
       try {
         const me = await base44.auth.me();
-        setUser(me);
         if (!me) {
-          base44.auth.redirectToLogin();
+          navigate("/signin", { replace: true });
           return;
         }
+        setUser(me);
         if (me.role !== allowedRole) {
-          // Silent redirect to correct portal
           if (me.role === "association_manager") navigate("/portal/association", { replace: true });
           else if (me.role === "vendor") navigate("/portal/vendor", { replace: true });
           else if (me.role === "resident") navigate("/portal/resident/dashboard", { replace: true });
-          else base44.auth.redirectToLogin();
+          else navigate("/signin", { replace: true });
           return;
         }
         setLoading(false);
       } catch {
-        base44.auth.redirectToLogin();
+        navigate("/signin", { replace: true });
       }
     };
     check();

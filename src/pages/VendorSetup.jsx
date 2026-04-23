@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { FLORIDA_COUNTIES, TRADE_CATEGORIES } from "@/lib/constants";
 import { ChevronRight, CheckCircle, Upload, X } from "lucide-react";
-import EmailVerification from "@/components/auth/EmailVerification";
 
 const STEP_LABELS = ["Credentials", "Business Info", "Categories", "Logo", "COI", "Trade License", "Workers Comp", "Sunbiz", "Review"];
 const TOTAL_STEPS = 8;
@@ -15,12 +14,11 @@ export default function VendorSetup() {
   const [loading, setLoading] = useState(false);
   const [initLoading, setInitLoading] = useState(true);
   const [error, setError] = useState("");
-  const [pendingVerification, setPendingVerification] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState("");
+
 
   const navigate = useNavigate();
 
-  const [creds, setCreds] = useState({ email: "", password: "" });
+  const [creds, setCreds] = useState({ email: "", password: "", confirm_password: "", tos: false });
   const [s1, setS1] = useState({ business_name: "", business_description: "", business_phone: "", business_email: "", business_website: "", years_in_business: "" });
   const [s2, setS2] = useState({ trade_categories: [], florida_counties_served: [] });
   const [logoFile, setLogoFile] = useState(null);
@@ -65,29 +63,52 @@ export default function VendorSetup() {
     await base44.functions.invoke("recalculateProfileCompletion", { vendor_id: vendorId });
   };
 
+  const parseError = (err) => {
+    const msg = err?.message || err?.error || err?.toString() || "";
+    const lower = msg.toLowerCase();
+    if (lower.includes("already exists") || lower.includes("already registered") || lower.includes("duplicate") || lower.includes("email_exists")) {
+      return "An account with this email address already exists. Please log in instead.";
+    }
+    if (lower.includes("password") && (lower.includes("short") || lower.includes("weak") || lower.includes("length"))) {
+      return "Your password must be at least 8 characters.";
+    }
+    if (lower.includes("network") || lower.includes("fetch") || lower.includes("connection")) {
+      return "Connection error. Please check your internet and try again.";
+    }
+    if (msg && !lower.includes("object object")) return msg;
+    return "Something went wrong. Please try again or contact support@approvedin.com";
+  };
+
   const handleCreds = async (e) => {
     e.preventDefault();
+    if (!creds.confirm_password) { setError("Please confirm your password."); return; }
+    if (creds.password.length < 8) { setError("Your password must be at least 8 characters."); return; }
+    if (creds.password !== creds.confirm_password) { setError("Passwords do not match."); return; }
+    if (!creds.tos) { setError("Please accept the Terms of Service."); return; }
     setLoading(true); setError("");
     try {
+      // 1. Register
       await base44.auth.register({ email: creds.email, password: creds.password, role: "vendor" });
-      // Show OTP verification screen
-      setPendingEmail(creds.email);
-      setPendingVerification(true);
+      // 2. Login immediately
+      await base44.auth.loginViaEmailPassword(creds.email, creds.password);
+      // 3. Update profile
+      await base44.auth.updateMe({ is_active: true, profile_complete: false });
+      // 4. Get user and create Vendor record
+      const user = await base44.auth.me();
+      const today = new Date().toISOString().split("T")[0];
+      const v = await base44.entities.Vendor.create({
+        user_id: user.id, business_name: "", subscription_tier: "beta",
+        beta_signup_date: today, setup_current_step: 1,
+        setup_highest_completed_step: 0, profile_completion_percentage: 0,
+        overall_compliance_status: "noncompliant", is_suspended: false,
+      });
+      setVendorId(v.id);
+      setVendor(v);
+      setInitLoading(false);
+      setStep(1);
     } catch (err) {
-      console.error("Account creation error:", err);
-      const msg = err?.message || err?.error || err?.toString() || "";
-      const lower = msg.toLowerCase();
-      if (lower.includes("already exists") || lower.includes("already registered") || lower.includes("duplicate")) {
-        setError("An account with this email address already exists. Please log in instead.");
-      } else if (lower.includes("password") && lower.includes("short")) {
-        setError("Your password must be at least 8 characters.");
-      } else if (lower.includes("user_not_registered") || lower.includes("not registered")) {
-        setError("Registration is currently restricted. Please contact support at support@approvedin.com");
-      } else if (msg) {
-        setError(msg);
-      } else {
-        setError("Something went wrong on our end. Please try again in a moment.");
-      }
+      console.error("Vendor account creation error:", err);
+      setError(parseError(err));
     } finally {
       setLoading(false);
     }
@@ -281,48 +302,11 @@ export default function VendorSetup() {
           )}
 
           <div className="bg-white rounded-2xl shadow-sm border border-sand-dark p-8">
-            {pendingVerification ? (
-              <EmailVerification
-                email={pendingEmail}
-                onVerified={async () => {
-                  try {
-                    // Step 1: Login
-                    await base44.auth.loginViaEmailPassword(pendingEmail, creds.password);
-                  } catch (err) {
-                    setError("Email verified but login failed. Please go to Log In and sign in with your email and password.");
-                    setPendingVerification(false);
-                    return;
-                  }
-                  try {
-                    // Step 2: Update user profile (role already set at register)
-                    await base44.auth.updateMe({ is_active: true, profile_complete: false });
-                    const user = await base44.auth.me();
-                    // Step 3: Create vendor record
-                    const today = new Date().toISOString().split("T")[0];
-                    const v = await base44.entities.Vendor.create({
-                      user_id: user.id, business_name: "", subscription_tier: "beta",
-                      beta_signup_date: today, setup_current_step: 1,
-                      setup_highest_completed_step: 0, profile_completion_percentage: 0,
-                      overall_compliance_status: "noncompliant", is_suspended: false,
-                    });
-                    setVendorId(v.id);
-                    setVendor(v);
-                    setInitLoading(false);
-                    setPendingVerification(false);
-                    setStep(1);
-                  } catch (err) {
-                    console.error("Post-login setup error:", err);
-                    setError("Your account was created but we could not finish setting it up. Please log in and we will complete your setup automatically.");
-                    setPendingVerification(false);
-                  }
-                }}
-              />
-            ) : (
             <>
             {error && (
               <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
                 {error}
-                {(error.includes("already exists") || error.includes("could not finish")) && (
+                {(error.includes("already exists") || error.includes("log in")) && (
                   <a href="/signin" className="block mt-2 underline font-semibold text-red-700 hover:text-red-900">Log In →</a>
                 )}
               </div>
@@ -336,8 +320,16 @@ export default function VendorSetup() {
                   <p className="text-body-brown text-sm">Free during beta — no credit card required.</p>
                 </div>
                 <Field label="Email address *" type="email" value={creds.email} onChange={v => setCreds({...creds, email: v})} required />
-                <Field label="Password *" type="password" value={creds.password} onChange={v => setCreds({...creds, password: v})} required />
+                <Field label="Password * (min 8 characters)" type="password" value={creds.password} onChange={v => setCreds({...creds, password: v})} required />
+                <Field label="Confirm password *" type="password" value={creds.confirm_password} onChange={v => setCreds({...creds, confirm_password: v})} required />
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" checked={creds.tos} onChange={e => setCreds({...creds, tos: e.target.checked})} className="mt-0.5 accent-teal" required />
+                  <span className="text-sm text-body-brown">I agree to the <a href="/terms" className="text-teal-dark underline" target="_blank">Terms of Service</a> and <a href="/privacy" className="text-teal-dark underline" target="_blank">Privacy Policy</a></span>
+                </label>
                 <SubmitBtn loading={loading} label="Create Account & Continue" />
+                <p className="text-center text-body-brown text-xs pt-1">
+                  Already have an account? <a href="/signin" className="text-teal-dark font-semibold hover:underline">Log In</a>
+                </p>
               </form>
             )}
 
@@ -520,7 +512,6 @@ export default function VendorSetup() {
               </div>
             )}
             </>
-            )}
           </div>
         </div>
       </div>
