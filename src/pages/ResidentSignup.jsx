@@ -89,10 +89,6 @@ export default function ResidentSignup() {
       await new Promise(r => setTimeout(r, 300));
       const user = await base44.auth.me();
       if (!user || !user.id) throw new Error("Could not establish session.");
-      // Ensure role is correctly set (platform may default to "user")
-      if (user.role !== "resident") {
-        await base44.auth.updateMe({ role: "resident" });
-      }
       await base44.entities.Resident.create({
         user_id: user.id,
         association_id: selectedAssoc.id,
