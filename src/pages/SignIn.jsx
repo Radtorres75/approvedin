@@ -20,18 +20,7 @@ export default function SignIn() {
     setError("");
     try {
       await base44.auth.loginViaEmailPassword(email, password);
-
-      // Wait for session to be written to browser
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Retry loop — confirm session is available before navigating
-      let user = null;
-      let attempts = 0;
-      while (!user && attempts < 5) {
-        try { user = await base44.auth.me(); } catch (e) {}
-        if (!user) await new Promise(resolve => setTimeout(resolve, 400));
-        attempts++;
-      }
+      const user = await base44.auth.me();
 
       if (!user) {
         throw new Error("Session could not be established. Please try again.");
@@ -41,15 +30,15 @@ export default function SignIn() {
       if (user.role === "association_manager") {
         const assocs = await base44.entities.Association.filter({ user_id: user.id });
         const assoc = assocs[0];
-        window.location.href = (!assoc || !assoc.onboarding_complete) ? "/onboarding" : "/portal/association";
+        navigate((!assoc || !assoc.onboarding_complete) ? "/onboarding" : "/portal/association", { replace: true });
       } else if (user.role === "vendor") {
         const vendors = await base44.entities.Vendor.filter({ user_id: user.id });
         const vendor = vendors[0];
-        window.location.href = (vendor && vendor.setup_highest_completed_step >= 8) ? "/portal/vendor" : "/portal/vendor/setup";
+        navigate((vendor && vendor.setup_highest_completed_step >= 8) ? "/portal/vendor" : "/portal/vendor/setup", { replace: true });
       } else if (user.role === "resident") {
-        window.location.href = "/portal/resident/dashboard";
+        navigate("/portal/resident/dashboard", { replace: true });
       } else {
-        window.location.href = "/signin";
+        navigate("/signin", { replace: true });
       }
     } catch (err) {
       console.error("Login error:", err);

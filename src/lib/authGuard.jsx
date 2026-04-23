@@ -1,50 +1,44 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 
 export function useRoleGuard(allowedRole) {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    let cancelled = false;
+
     const check = async () => {
       try {
-        // Wait for session to fully initialize after hard navigation
-        await new Promise(resolve => setTimeout(resolve, 800));
+        const me = await base44.auth.me();
 
-        let me = null;
-        let attempts = 0;
-
-        // Retry up to 5 times with 400ms gaps
-        while (!me && attempts < 5) {
-          try {
-            me = await base44.auth.me();
-          } catch (e) {
-            // session not ready yet
-          }
-          if (!me) await new Promise(resolve => setTimeout(resolve, 400));
-          attempts++;
-        }
+        if (cancelled) return;
 
         if (!me) {
-          window.location.href = "/signin";
+          navigate("/signin", { replace: true });
           return;
         }
 
         if (me.role !== allowedRole) {
-          if (me.role === "association_manager") window.location.href = "/portal/association";
-          else if (me.role === "vendor") window.location.href = "/portal/vendor";
-          else if (me.role === "resident") window.location.href = "/portal/resident/dashboard";
-          else window.location.href = "/signin";
+          if (me.role === "association_manager") navigate("/portal/association", { replace: true });
+          else if (me.role === "vendor") navigate("/portal/vendor", { replace: true });
+          else if (me.role === "resident") navigate("/portal/resident/dashboard", { replace: true });
+          else navigate("/signin", { replace: true });
           return;
         }
 
         setUser(me);
         setLoading(false);
       } catch {
-        window.location.href = "/signin";
+        if (!cancelled) navigate("/signin", { replace: true });
       }
     };
+
     check();
+
+    return () => { cancelled = true; };
   }, [allowedRole]);
 
   return { loading, user };
