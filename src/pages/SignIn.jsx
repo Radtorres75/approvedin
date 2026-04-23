@@ -21,28 +21,32 @@ export default function SignIn() {
     try {
       await base44.auth.loginViaEmailPassword(email, password);
 
-      // Wait for session to fully establish
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Wait for session to be written to browser
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const user = await base44.auth.me();
+      // Retry loop — confirm session is available before navigating
+      let user = null;
+      let attempts = 0;
+      while (!user && attempts < 5) {
+        try { user = await base44.auth.me(); } catch (e) {}
+        if (!user) await new Promise(resolve => setTimeout(resolve, 400));
+        attempts++;
+      }
 
       if (!user) {
-        throw new Error("Could not confirm your session. Please try again.");
+        throw new Error("Session could not be established. Please try again.");
       }
 
       // Route by role
       if (user.role === "association_manager") {
         const assocs = await base44.entities.Association.filter({ user_id: user.id });
         const assoc = assocs[0];
-        await new Promise(resolve => setTimeout(resolve, 300));
         window.location.href = (!assoc || !assoc.onboarding_complete) ? "/onboarding" : "/portal/association";
       } else if (user.role === "vendor") {
         const vendors = await base44.entities.Vendor.filter({ user_id: user.id });
         const vendor = vendors[0];
-        await new Promise(resolve => setTimeout(resolve, 300));
         window.location.href = (vendor && vendor.setup_highest_completed_step >= 8) ? "/portal/vendor" : "/portal/vendor/setup";
       } else if (user.role === "resident") {
-        await new Promise(resolve => setTimeout(resolve, 300));
         window.location.href = "/portal/resident/dashboard";
       } else {
         window.location.href = "/signin";

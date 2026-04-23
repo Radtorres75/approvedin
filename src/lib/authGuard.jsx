@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 
 export function useRoleGuard(allowedRole) {
@@ -8,11 +8,28 @@ export function useRoleGuard(allowedRole) {
   useEffect(() => {
     const check = async () => {
       try {
-        const me = await base44.auth.me();
+        // Wait for session to fully initialize after hard navigation
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        let me = null;
+        let attempts = 0;
+
+        // Retry up to 5 times with 400ms gaps
+        while (!me && attempts < 5) {
+          try {
+            me = await base44.auth.me();
+          } catch (e) {
+            // session not ready yet
+          }
+          if (!me) await new Promise(resolve => setTimeout(resolve, 400));
+          attempts++;
+        }
+
         if (!me) {
           window.location.href = "/signin";
           return;
         }
+
         if (me.role !== allowedRole) {
           if (me.role === "association_manager") window.location.href = "/portal/association";
           else if (me.role === "vendor") window.location.href = "/portal/vendor";
@@ -20,6 +37,7 @@ export function useRoleGuard(allowedRole) {
           else window.location.href = "/signin";
           return;
         }
+
         setUser(me);
         setLoading(false);
       } catch {
