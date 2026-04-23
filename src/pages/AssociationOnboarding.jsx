@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { FLORIDA_COUNTIES, ASSOCIATION_TYPES } from "@/lib/constants";
-import { ChevronRight, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { ChevronRight, CheckCircle, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 
-// step 0 = create account, step 1 = association details, step 2 = compliance, step 3 = done
+// step 0 = create account, "verify" = OTP, step 1 = association details, step 2 = compliance
 const STEP_LABELS = ["Account", "Association", "Compliance"];
 
 export default function AssociationOnboarding() {
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(0); // 0 = form, "verify" = OTP, 1/2 = wizard
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [pendingPassword, setPendingPassword] = useState("");
   const [assocId, setAssocId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -42,7 +44,6 @@ export default function AssociationOnboarding() {
     if (creds.password !== creds.confirm_password) { setError("Passwords do not match."); return; }
     setLoading(true); setError("");
     try {
-      // 1. Register auth account
       await base44.auth.register({
         email: creds.email,
         password: creds.password,
@@ -50,14 +51,26 @@ export default function AssociationOnboarding() {
         last_name: creds.last_name,
         role: "association_manager",
       });
-      // 2. Login to establish session
-      await base44.auth.loginViaEmailPassword(creds.email, creds.password);
-      // 3. Fetch user — short delay to ensure session is ready
+      // Show OTP verification step
+      setPendingEmail(creds.email);
+      setPendingPassword(creds.password);
+      setStep("verify");
+    } catch (err) {
+      console.error("Account creation error:", err);
+      const parsed = parseError(err);
+      setError(parsed.text);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerified = async () => {
+    setLoading(true); setError("");
+    try {
+      await base44.auth.loginViaEmailPassword(pendingEmail, pendingPassword);
       await new Promise(r => setTimeout(r, 300));
       const user = await base44.auth.me();
-      console.log("USER AFTER REGISTER:", user);
-      if (!user || !user.id) throw new Error("Account created but session could not be established. Please log in.");
-      // 4. Create Association record
+      if (!user || !user.id) throw new Error("Could not establish session. Please log in.");
       const assoc = await base44.entities.Association.create({
         user_id: user.id,
         association_name: "",
@@ -67,9 +80,7 @@ export default function AssociationOnboarding() {
       setAssocId(assoc.id);
       setStep(1);
     } catch (err) {
-      console.error("Account creation error:", err);
-      const parsed = parseError(err);
-      setError(parsed.text);
+      setError("Verification succeeded but login failed. Please try logging in.");
     } finally {
       setLoading(false);
     }
@@ -151,6 +162,11 @@ export default function AssociationOnboarding() {
                   <Link to="/signin" className="block mt-2 underline font-semibold text-red-700 hover:text-red-900">Log In →</Link>
                 )}
               </div>
+            )}
+
+            {/* VERIFY: OTP step */}
+            {step === "verify" && (
+              <OtpStep email={pendingEmail} onVerified={handleVerified} loading={loading} />
             )}
 
             {/* STEP 0: Create Account */}
@@ -254,6 +270,70 @@ export default function AssociationOnboarding() {
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function OtpStep({ email, onVerified, loading }) {
+  const [otp, setOtp] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [error, setError] = useState("");
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
+
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    setVerifying(true); setError("");
+    try {
+      await base44.auth.verifyOtp({ email, otpCode: otp });
+      await onVerified();
+    } catch (err) {
+      const msg = err?.message || err?.toString() || "";
+      setError(msg.toLowerCase().includes("invalid") || msg.toLowerCase().includes("expired")
+        ? "Invalid or expired code. Please try again or request a new one."
+        : "Verification failed. Please try again.");
+      setVerifying(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setResending(true); setResent(false); setError("");
+    try { await base44.auth.resendOtp(email); setResent(true); }
+    catch { setError("Could not resend code. Please try again."); }
+    finally { setResending(false); }
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="text-center">
+        <div className="w-14 h-14 bg-teal/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <ShieldCheck size={24} className="text-teal-dark" />
+        </div>
+        <h2 className="text-2xl font-black text-navy mb-2">Check your email</h2>
+        <p className="text-body-brown text-sm">We sent a 6-digit code to <strong>{email}</strong>. Enter it below to activate your account.</p>
+      </div>
+      {error && <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg">{error}</div>}
+      {resent && <div className="bg-teal/5 border border-teal/20 text-teal-dark text-sm px-4 py-3 rounded-lg">A new code has been sent.</div>}
+      <form onSubmit={handleVerify} className="space-y-4">
+        <div>
+          <label className="block text-navy font-medium text-sm mb-1.5">Verification code</label>
+          <input type="text" inputMode="numeric" maxLength={6} value={otp}
+            onChange={e => setOtp(e.target.value.replace(/\D/g, ""))} required autoFocus
+            placeholder="123456"
+            className="w-full border border-sand-dark rounded-lg px-4 py-3 text-navy text-xl text-center tracking-widest font-bold focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal bg-white" />
+        </div>
+        <button type="submit" disabled={verifying || loading || otp.length < 6}
+          className="w-full bg-navy hover:bg-navy-mid text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-60">
+          {verifying || loading ? "Verifying..." : "Verify & Continue"}
+        </button>
+      </form>
+      <div className="text-center">
+        <p className="text-body-brown text-sm">Didn't receive the email?</p>
+        <button onClick={handleResend} disabled={resending}
+          className="text-teal-dark text-sm font-semibold hover:underline mt-1 disabled:opacity-60">
+          {resending ? "Sending..." : "Resend code"}
+        </button>
       </div>
     </div>
   );
