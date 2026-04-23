@@ -31,9 +31,7 @@ export default function SignIn() {
       if (user.role === "association_manager") {
         const assocs = await base44.entities.Association.filter({ user_id: user.id });
         const assoc = assocs[0];
-        // If no association record exists yet, ensure profile is set and restart onboarding
         if (!assoc) {
-          await base44.auth.updateMe({ is_active: true });
           window.location.href = "/onboarding";
           return;
         }
@@ -41,9 +39,7 @@ export default function SignIn() {
       } else if (user.role === "vendor") {
         const vendors = await base44.entities.Vendor.filter({ user_id: user.id });
         const vendor = vendors[0];
-        // If no vendor record exists yet, restart setup
         if (!vendor) {
-          await base44.auth.updateMe({ is_active: true });
           window.location.href = "/portal/vendor/setup";
           return;
         }
