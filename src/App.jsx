@@ -25,23 +25,23 @@ import VendorSetup from './pages/VendorSetup';
 import ResidentSignup from './pages/ResidentSignup';
 
 // Association portal
-import AssociationPortal from './pages/association/AssociationPortal';
-import AssociationVendors from './pages/association/AssociationVendors';
-import AssociationDocuments from './pages/association/AssociationDocuments';
-import AssociationSettings from './pages/association/AssociationSettings';
+import AssociationDashboard from './pages/association/AssociationDashboard';
+import AssociationVendorDirectory from './pages/association/AssociationVendorDirectory';
+import AssociationDocumentVault from './pages/association/AssociationDocumentVault';
+import AssociationSettingsPage from './pages/association/AssociationSettingsPage';
 
 // Vendor portal
-import VendorPortal from './pages/vendor/VendorPortal';
-import VendorDocuments from './pages/vendor/VendorDocuments';
-import VendorAssociations from './pages/vendor/VendorAssociations';
-import VendorProfile from './pages/vendor/VendorProfile';
-import VendorSettings from './pages/vendor/VendorSettings';
+import VendorDashboard from './pages/vendor/VendorDashboard';
+import VendorDocumentsPage from './pages/vendor/VendorDocumentsPage';
+import VendorAssociationsPage from './pages/vendor/VendorAssociationsPage';
+import VendorProfilePage from './pages/vendor/VendorProfilePage';
+import VendorSettingsPage from './pages/vendor/VendorSettingsPage';
 
 // Resident portal
-import ResidentDashboard from './pages/resident/ResidentDashboard';
-import ResidentVendors from './pages/resident/ResidentVendors';
-import ResidentProfile from './pages/resident/ResidentProfile';
-import ResidentNotifications from './pages/resident/ResidentNotifications';
+import ResidentHome from './pages/resident/ResidentHome';
+import ResidentVendorDirectory from './pages/resident/ResidentVendorDirectory';
+import ResidentProfilePage from './pages/resident/ResidentProfilePage';
+import ResidentNotificationsPage from './pages/resident/ResidentNotificationsPage';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -84,23 +84,23 @@ const AuthenticatedApp = () => {
       <Route path="/resident/signup" element={<ResidentSignup />} />
 
       {/* Association portal */}
-      <Route path="/portal/association" element={<AssociationPortal />} />
-      <Route path="/portal/association/vendors" element={<AssociationVendors />} />
-      <Route path="/portal/association/documents" element={<AssociationDocuments />} />
-      <Route path="/portal/association/settings" element={<AssociationSettings />} />
+      <Route path="/portal/association" element={<AssociationDashboard />} />
+      <Route path="/portal/association/vendors" element={<AssociationVendorDirectory />} />
+      <Route path="/portal/association/documents" element={<AssociationDocumentVault />} />
+      <Route path="/portal/association/settings" element={<AssociationSettingsPage />} />
 
       {/* Vendor portal */}
-      <Route path="/portal/vendor" element={<VendorPortal />} />
-      <Route path="/portal/vendor/documents" element={<VendorDocuments />} />
-      <Route path="/portal/vendor/associations" element={<VendorAssociations />} />
-      <Route path="/portal/vendor/profile" element={<VendorProfile />} />
-      <Route path="/portal/vendor/settings" element={<VendorSettings />} />
+      <Route path="/portal/vendor" element={<VendorDashboard />} />
+      <Route path="/portal/vendor/documents" element={<VendorDocumentsPage />} />
+      <Route path="/portal/vendor/associations" element={<VendorAssociationsPage />} />
+      <Route path="/portal/vendor/profile" element={<VendorProfilePage />} />
+      <Route path="/portal/vendor/settings" element={<VendorSettingsPage />} />
 
       {/* Resident portal */}
-      <Route path="/portal/resident/dashboard" element={<ResidentDashboard />} />
-      <Route path="/portal/resident/vendors" element={<ResidentVendors />} />
-      <Route path="/portal/resident/profile" element={<ResidentProfile />} />
-      <Route path="/portal/resident/notifications" element={<ResidentNotifications />} />
+      <Route path="/portal/resident/dashboard" element={<ResidentHome />} />
+      <Route path="/portal/resident/vendors" element={<ResidentVendorDirectory />} />
+      <Route path="/portal/resident/profile" element={<ResidentProfilePage />} />
+      <Route path="/portal/resident/notifications" element={<ResidentNotificationsPage />} />
 
       <Route path="*" element={<PageNotFound />} />
     </Routes>
