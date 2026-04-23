@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { FLORIDA_COUNTIES, ASSOCIATION_TYPES } from "@/lib/constants";
 import { ChevronRight, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import EmailVerification from "@/components/auth/EmailVerification";
 
 const STEPS = ["Account", "Association", "Compliance"];
 
@@ -13,6 +14,7 @@ export default function AssociationOnboarding() {
   const [assocId, setAssocId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [pendingVerification, setPendingVerification] = useState(false);
 
   const navigate = useNavigate();
 
@@ -26,14 +28,8 @@ export default function AssociationOnboarding() {
     setLoading(true); setError("");
     try {
       await base44.auth.register({ email: s1.email, password: s1.password });
-      // Log in immediately after registration (no OTP step - email goes to unregistered user)
-      await base44.auth.loginViaEmailPassword(s1.email, s1.password);
-      await base44.auth.updateMe({ first_name: s1.first_name, last_name: s1.last_name, role: "association_manager" });
-      const user = await base44.auth.me();
-      setUserId(user.id);
-      const assoc = await base44.entities.Association.create({ user_id: user.id, association_name: "", onboarding_complete: false, subscription_tier: "free" });
-      setAssocId(assoc.id);
-      setStep(2);
+      // Show OTP verification screen
+      setPendingVerification(true);
     } catch (err) {
       console.error("Account creation error:", err);
       const msg = err?.message || err?.error || err?.toString() || "";
@@ -118,6 +114,27 @@ export default function AssociationOnboarding() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-sand-dark p-8">
+            {pendingVerification ? (
+              <EmailVerification
+                email={s1.email}
+                onVerified={async () => {
+                  try {
+                    await base44.auth.loginViaEmailPassword(s1.email, s1.password);
+                    await base44.auth.updateMe({ first_name: s1.first_name, last_name: s1.last_name, role: "association_manager" });
+                    const user = await base44.auth.me();
+                    setUserId(user.id);
+                    const assoc = await base44.entities.Association.create({ user_id: user.id, association_name: "", onboarding_complete: false, subscription_tier: "free" });
+                    setAssocId(assoc.id);
+                    setPendingVerification(false);
+                    setStep(2);
+                  } catch (err) {
+                    setError("Verified but setup failed. Please try logging in.");
+                    setPendingVerification(false);
+                  }
+                }}
+              />
+            ) : (
+            <>
             {error && (
               <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
                 {error}
@@ -207,6 +224,8 @@ export default function AssociationOnboarding() {
                 </div>
                 <SubmitBtn loading={loading} label="Complete Setup" />
               </form>
+            )}
+            </>
             )}
           </div>
         </div>

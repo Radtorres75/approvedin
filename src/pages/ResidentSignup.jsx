@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { CheckCircle, ChevronRight, Search } from "lucide-react";
+import EmailVerification from "@/components/auth/EmailVerification";
 
 const STEPS = ["Find Community", "Your Unit", "Create Account"];
 
@@ -9,6 +10,7 @@ export default function ResidentSignup() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [pendingVerification, setPendingVerification] = useState(false);
   const navigate = useNavigate();
 
   const [associations, setAssociations] = useState([]);
@@ -45,17 +47,8 @@ export default function ResidentSignup() {
     setLoading(true); setError("");
     try {
       await base44.auth.register({ email: s3.email, password: s3.password });
-      // Log in immediately after registration
-      await base44.auth.updateMe({ role: "resident", first_name: s3.first_name, last_name: s3.last_name, phone_number: s3.phone_number });
-      const user = await base44.auth.me();
-      await base44.entities.Resident.create({
-        user_id: user.id, association_id: selectedAssoc.id,
-        first_name: s3.first_name, last_name: s3.last_name,
-        email: s3.email, phone_number: s3.phone_number,
-        address: s3.address, unit_number: s2.unit_number,
-        resident_type: s2.resident_type,
-      });
-      navigate("/portal/resident/dashboard");
+      // Show OTP verification screen
+      setPendingVerification(true);
     } catch (err) {
       console.error("Account creation error:", err);
       const msg = err?.message || err?.error || err?.toString() || "";
@@ -105,6 +98,30 @@ export default function ResidentSignup() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-sand-dark p-8">
+            {pendingVerification ? (
+              <EmailVerification
+                email={s3.email}
+                onVerified={async () => {
+                  try {
+                    await base44.auth.loginViaEmailPassword(s3.email, s3.password);
+                    await base44.auth.updateMe({ role: "resident", first_name: s3.first_name, last_name: s3.last_name, phone_number: s3.phone_number });
+                    const user = await base44.auth.me();
+                    await base44.entities.Resident.create({
+                      user_id: user.id, association_id: selectedAssoc.id,
+                      first_name: s3.first_name, last_name: s3.last_name,
+                      email: s3.email, phone_number: s3.phone_number,
+                      address: s3.address, unit_number: s2.unit_number,
+                      resident_type: s2.resident_type,
+                    });
+                    navigate("/portal/resident/dashboard");
+                  } catch (err) {
+                    setError("Verified but setup failed. Please try logging in.");
+                    setPendingVerification(false);
+                  }
+                }}
+              />
+            ) : (
+            <>
             {error && (
               <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
                 {error}
@@ -195,6 +212,8 @@ export default function ResidentSignup() {
                   {loading ? "Creating account..." : <>Complete Signup <ChevronRight size={16} /></>}
                 </button>
               </form>
+            )}
+            </>
             )}
           </div>
         </div>
