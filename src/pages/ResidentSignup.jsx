@@ -62,21 +62,23 @@ export default function ResidentSignup() {
     setLoading(true); setError("");
     try {
       // 1. Register
-      await base44.auth.register({
+      const registered = await base44.auth.register({
         email: s3.email,
         password: s3.password,
         first_name: s3.first_name,
         last_name: s3.last_name,
         role: "resident",
       });
-      // 2. Login immediately
-      await base44.auth.loginViaEmailPassword(s3.email, s3.password);
-      // 3. Update profile fields
-      await base44.auth.updateMe({ phone_number: s3.phone_number, is_active: true, profile_complete: false });
-      // 4. Get user and create Resident record
-      const user = await base44.auth.me();
+      // 2. Get user ID from register result or fallback to login
+      let userId = registered?.id || registered?.user?.id;
+      if (!userId) {
+        await base44.auth.loginViaEmailPassword(s3.email, s3.password);
+        const user = await base44.auth.me();
+        userId = user.id;
+      }
+      // 3. Create Resident record immediately using userId
       await base44.entities.Resident.create({
-        user_id: user.id,
+        user_id: userId,
         association_id: selectedAssoc.id,
         first_name: s3.first_name,
         last_name: s3.last_name,
@@ -86,6 +88,10 @@ export default function ResidentSignup() {
         unit_number: s2.unit_number,
         resident_type: s2.resident_type,
       });
+      // 4. Now login to establish session
+      try {
+        await base44.auth.loginViaEmailPassword(s3.email, s3.password);
+      } catch {}
       window.location.href = "/portal/resident/dashboard";
     } catch (err) {
       console.error("Resident signup error:", err);

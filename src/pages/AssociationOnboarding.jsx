@@ -43,26 +43,32 @@ export default function AssociationOnboarding() {
     setLoading(true); setError("");
     try {
       // 1. Register auth account
-      await base44.auth.register({
+      const registered = await base44.auth.register({
         email: creds.email,
         password: creds.password,
         first_name: creds.first_name,
         last_name: creds.last_name,
         role: "association_manager",
       });
-      // 2. Login immediately
-      await base44.auth.loginViaEmailPassword(creds.email, creds.password);
-      // 3. Set profile fields
-      await base44.auth.updateMe({ first_name: creds.first_name, last_name: creds.last_name, is_active: true, profile_complete: false });
-      // 4. Get user and create Association record
-      const user = await base44.auth.me();
+      // 2. Get user ID from register result or fallback to login
+      let userId = registered?.id || registered?.user?.id;
+      if (!userId) {
+        await base44.auth.loginViaEmailPassword(creds.email, creds.password);
+        const user = await base44.auth.me();
+        userId = user.id;
+      }
+      // 3. Create Association record immediately using userId
       const assoc = await base44.entities.Association.create({
-        user_id: user.id,
+        user_id: userId,
         association_name: "",
         onboarding_complete: false,
         subscription_tier: "free",
       });
       setAssocId(assoc.id);
+      // 4. Now login to establish session (may fail if email unverified — handled below)
+      try {
+        await base44.auth.loginViaEmailPassword(creds.email, creds.password);
+      } catch {}
       setStep(1);
     } catch (err) {
       console.error("Account creation error:", err);

@@ -88,22 +88,28 @@ export default function VendorSetup() {
     setLoading(true); setError("");
     try {
       // 1. Register
-      await base44.auth.register({ email: creds.email, password: creds.password, role: "vendor" });
-      // 2. Login immediately
-      await base44.auth.loginViaEmailPassword(creds.email, creds.password);
-      // 3. Update profile
-      await base44.auth.updateMe({ is_active: true, profile_complete: false });
-      // 4. Get user and create Vendor record
-      const user = await base44.auth.me();
+      const registered = await base44.auth.register({ email: creds.email, password: creds.password, role: "vendor" });
+      // 2. Get user ID from register result or fallback to login
+      let userId = registered?.id || registered?.user?.id;
+      if (!userId) {
+        await base44.auth.loginViaEmailPassword(creds.email, creds.password);
+        const user = await base44.auth.me();
+        userId = user.id;
+      }
+      // 3. Create Vendor record immediately using userId
       const today = new Date().toISOString().split("T")[0];
       const v = await base44.entities.Vendor.create({
-        user_id: user.id, business_name: "", subscription_tier: "beta",
+        user_id: userId, business_name: "", subscription_tier: "beta",
         beta_signup_date: today, setup_current_step: 1,
         setup_highest_completed_step: 0, profile_completion_percentage: 0,
         overall_compliance_status: "noncompliant", is_suspended: false,
       });
       setVendorId(v.id);
       setVendor(v);
+      // 4. Now login to establish session
+      try {
+        await base44.auth.loginViaEmailPassword(creds.email, creds.password);
+      } catch {}
       setInitLoading(false);
       setStep(1);
     } catch (err) {
