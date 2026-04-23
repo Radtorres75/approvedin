@@ -128,6 +128,22 @@ export default function Home() {
       </section>
 
       <PublicFooter />
+
+      {/* TEMPORARY TEST BUTTONS — remove after confirming portals load */}
+      <div style={{
+        position: "fixed", bottom: "20px", left: "50%", transform: "translateX(-50%)",
+        display: "flex", gap: "10px", zIndex: 9999, flexWrap: "wrap", justifyContent: "center"
+      }}>
+        <a href="/portal/association" style={{background:"#e74c3c",color:"white",padding:"10px 16px",borderRadius:"8px",fontSize:"13px",textDecoration:"none",fontWeight:"bold"}}>
+          TEST: Association Portal
+        </a>
+        <a href="/portal/vendor" style={{background:"#e74c3c",color:"white",padding:"10px 16px",borderRadius:"8px",fontSize:"13px",textDecoration:"none",fontWeight:"bold"}}>
+          TEST: Vendor Portal
+        </a>
+        <a href="/portal/resident/dashboard" style={{background:"#e74c3c",color:"white",padding:"10px 16px",borderRadius:"8px",fontSize:"13px",textDecoration:"none",fontWeight:"bold"}}>
+          TEST: Resident Portal
+        </a>
+      </div>
     </div>);
 
 }

@@ -20,34 +20,32 @@ export default function SignIn() {
     setError("");
     try {
       await base44.auth.loginViaEmailPassword(email, password);
+
+      // Wait for session to fully establish
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       const user = await base44.auth.me();
 
-      // Auto-recover: if role is missing (setup failed previously), send to correct signup flow
-      if (!user.role || user.role === "admin") {
-        window.location.href = "/";
-        return;
+      if (!user) {
+        throw new Error("Could not confirm your session. Please try again.");
       }
 
+      // Route by role
       if (user.role === "association_manager") {
         const assocs = await base44.entities.Association.filter({ user_id: user.id });
         const assoc = assocs[0];
-        if (!assoc) {
-          window.location.href = "/onboarding";
-          return;
-        }
-        window.location.href = assoc.onboarding_complete ? "/portal/association" : "/onboarding";
+        await new Promise(resolve => setTimeout(resolve, 300));
+        window.location.href = (!assoc || !assoc.onboarding_complete) ? "/onboarding" : "/portal/association";
       } else if (user.role === "vendor") {
         const vendors = await base44.entities.Vendor.filter({ user_id: user.id });
         const vendor = vendors[0];
-        if (!vendor) {
-          window.location.href = "/portal/vendor/setup";
-          return;
-        }
-        window.location.href = (vendor.setup_highest_completed_step >= 8) ? "/portal/vendor" : "/portal/vendor/setup";
+        await new Promise(resolve => setTimeout(resolve, 300));
+        window.location.href = (vendor && vendor.setup_highest_completed_step >= 8) ? "/portal/vendor" : "/portal/vendor/setup";
       } else if (user.role === "resident") {
+        await new Promise(resolve => setTimeout(resolve, 300));
         window.location.href = "/portal/resident/dashboard";
       } else {
-        window.location.href = "/";
+        window.location.href = "/signin";
       }
     } catch (err) {
       console.error("Login error:", err);
