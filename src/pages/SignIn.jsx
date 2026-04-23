@@ -21,10 +21,19 @@ export default function SignIn() {
     try {
       await base44.auth.loginViaEmailPassword(email, password);
       const user = await base44.auth.me();
-      if (user.role === "association_manager") window.location.href = "/portal/association";
-      else if (user.role === "vendor") window.location.href = "/portal/vendor";
-      else if (user.role === "resident") window.location.href = "/portal/resident/dashboard";
-      else window.location.href = "/";
+      if (user.role === "association_manager") {
+        const assocs = await base44.entities.Association.filter({ user_id: user.id });
+        const assoc = assocs[0];
+        window.location.href = (assoc?.onboarding_complete) ? "/portal/association" : "/onboarding";
+      } else if (user.role === "vendor") {
+        const vendors = await base44.entities.Vendor.filter({ user_id: user.id });
+        const vendor = vendors[0];
+        window.location.href = (vendor?.setup_highest_completed_step >= 8) ? "/portal/vendor" : "/portal/vendor/setup";
+      } else if (user.role === "resident") {
+        window.location.href = "/portal/resident/dashboard";
+      } else {
+        window.location.href = "/";
+      }
     } catch (err) {
       console.error("Login error:", err);
       const msg = err?.message || err?.error || err?.toString() || "";

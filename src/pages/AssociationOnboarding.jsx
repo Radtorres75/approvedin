@@ -120,7 +120,7 @@ export default function AssociationOnboarding() {
                 onVerified={async () => {
                   try {
                     await base44.auth.loginViaEmailPassword(s1.email, s1.password);
-                    await base44.auth.updateMe({ first_name: s1.first_name, last_name: s1.last_name, role: "association_manager" });
+                    await base44.auth.updateMe({ first_name: s1.first_name, last_name: s1.last_name, role: "association_manager", is_active: true, profile_complete: false });
                     const user = await base44.auth.me();
                     setUserId(user.id);
                     const assoc = await base44.entities.Association.create({ user_id: user.id, association_name: "", onboarding_complete: false, subscription_tier: "free" });

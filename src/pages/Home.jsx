@@ -28,7 +28,7 @@ export default function Home() {
       </section>
 
       {/* Audience Cards */}
-      <section className="bg-cream py-16 px-4 -mt-1">
+      <section id="audience-cards" className="bg-cream py-16 px-4 -mt-1">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
