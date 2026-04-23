@@ -34,7 +34,7 @@ export default function VendorPortal() {
     const v = vendors[0];
     if (!v) { navigate("/portal/vendor/setup"); return; }
 
-    if (!v.setup_highest_completed_step || v.setup_highest_completed_step < 7) {
+    if (!v.setup_highest_completed_step || v.setup_highest_completed_step < 8) {
       navigate("/portal/vendor/setup");
       return;
     }

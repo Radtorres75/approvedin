@@ -27,8 +27,9 @@ export default function AssociationPortal() {
 
   const loadData = async () => {
     setLoading(true);
-    const assocs = await base44.entities.Association.filter({ user_id: user.id });
-    const assoc = assocs[0];
+    // Filter by created_by (email) since that's what the RLS uses
+    const assocs = await base44.entities.Association.list();
+    const assoc = assocs.find(a => a.user_id === user.id) || assocs[0];
     if (!assoc) { navigate("/onboarding"); return; }
     if (!assoc.onboarding_complete) { navigate("/onboarding"); return; }
 

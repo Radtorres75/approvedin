@@ -30,8 +30,8 @@ export default function AssociationDocuments() {
 
   const loadData = async () => {
     setLoading(true);
-    const assocs = await base44.entities.Association.filter({ user_id: user.id });
-    const a = assocs[0];
+    const assocs = await base44.entities.Association.list();
+    const a = assocs.find(x => x.user_id === user.id) || assocs[0];
     setAssoc(a);
     if (!a) { setLoading(false); return; }
 

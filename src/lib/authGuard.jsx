@@ -15,14 +15,15 @@ export function useRoleGuard(allowedRole) {
           navigate("/signin", { replace: true });
           return;
         }
-        setUser(me);
         if (me.role !== allowedRole) {
+          setLoading(false);
           if (me.role === "association_manager") navigate("/portal/association", { replace: true });
           else if (me.role === "vendor") navigate("/portal/vendor", { replace: true });
           else if (me.role === "resident") navigate("/portal/resident/dashboard", { replace: true });
           else navigate("/signin", { replace: true });
           return;
         }
+        setUser(me);
         setLoading(false);
       } catch {
         navigate("/signin", { replace: true });
