@@ -68,7 +68,7 @@ export default function AssociationOnboarding() {
     setLoading(true); setError("");
     try {
       await base44.auth.loginViaEmailPassword(pendingEmail, pendingPassword);
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise(r => setTimeout(r, 500));
       const user = await base44.auth.me();
       if (!user || !user.id) throw new Error("Could not establish session. Please log in.");
       const assoc = await base44.entities.Association.create({
@@ -80,7 +80,9 @@ export default function AssociationOnboarding() {
       setAssocId(assoc.id);
       setStep(1);
     } catch (err) {
-      setError("Verification succeeded but login failed. Please try logging in.");
+      console.error("handleVerified error:", err);
+      const msg = err?.message || err?.toString() || "";
+      setError(msg && !msg.toLowerCase().includes("object object") ? msg : "Login failed after verification. Please go to the Sign In page and log in manually.");
     } finally {
       setLoading(false);
     }
@@ -98,7 +100,9 @@ export default function AssociationOnboarding() {
       });
       setStep(2);
     } catch (err) {
-      setError("Failed to save. Please try again.");
+      console.error("handleStep1 error:", err);
+      const msg = err?.message || err?.toString() || "";
+      setError(msg && !msg.toLowerCase().includes("object object") ? msg : "Failed to save. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -116,7 +120,9 @@ export default function AssociationOnboarding() {
       await base44.auth.updateMe({ profile_complete: true });
       window.location.href = "/portal/association";
     } catch (err) {
-      setError("Failed to complete setup. Please try again.");
+      console.error("handleStep2 error:", err);
+      const msg = err?.message || err?.toString() || "";
+      setError(msg && !msg.toLowerCase().includes("object object") ? msg : "Failed to complete setup. Please try again.");
     } finally {
       setLoading(false);
     }
