@@ -71,6 +71,12 @@ export default function AssociationOnboarding() {
       await new Promise(r => setTimeout(r, 800));
       const user = await base44.auth.me();
       if (!user || !user.id) throw new Error("Could not establish session. Please log in.");
+
+      // Ensure role is set correctly
+      if (user.role !== "association_manager") {
+        await base44.auth.updateMe({ role: "association_manager" });
+      }
+
       const assoc = await base44.entities.Association.create({
         user_id: user.id,
         association_name: "",

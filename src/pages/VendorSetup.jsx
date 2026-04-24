@@ -109,6 +109,11 @@ export default function VendorSetup() {
       const user = await base44.auth.me();
       if (!user || !user.id) throw new Error("Could not establish session.");
       const today = new Date().toISOString().split("T")[0];
+      // Ensure role is set correctly
+      if (user.role !== "vendor") {
+        await base44.auth.updateMe({ role: "vendor" });
+      }
+
       const v = await base44.entities.Vendor.create({
         user_id: user.id, business_name: "", subscription_tier: "beta",
         beta_signup_date: today, setup_current_step: 1,
