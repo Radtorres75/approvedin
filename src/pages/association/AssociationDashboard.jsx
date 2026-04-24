@@ -6,7 +6,7 @@ import ComplianceBadge from "@/lib/complianceBadge";
 import { computeDocStatus } from "@/lib/constants";
 import {
   AlertTriangle, Users, FileCheck, Clock, CheckCircle, Send, Search,
-  Mail, RefreshCw, X, ChevronRight
+  Mail, RefreshCw, X, ChevronRight, Copy, Check, UserPlus
 } from "lucide-react";
 
 export default function AssociationDashboard() {
@@ -22,6 +22,9 @@ export default function AssociationDashboard() {
   const [rejectModal, setRejectModal] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [residents, setResidents] = useState([]);
+  const [copied, setCopied] = useState(false);
+  const [residentModal, setResidentModal] = useState(false);
 
   useEffect(() => { loadPage(); }, []);
 
@@ -43,14 +46,16 @@ export default function AssociationDashboard() {
       if (!assoc.onboarding_complete) { navigate("/onboarding"); return; }
       setAssociation(assoc);
 
-      const [avs, apps, invs] = await Promise.all([
+      const [avs, apps, invs, res] = await Promise.all([
         base44.entities.AssociationVendor.filter({ association_id: assoc.id }),
         base44.entities.AssociationVendor.filter({ association_id: assoc.id, status: "pending" }),
         base44.entities.VendorInvitation.filter({ association_id: assoc.id }),
+        base44.entities.Resident.filter({ association_id: assoc.id }),
       ]);
       setAssocVendors(avs);
       setPendingApps(apps);
       setInvitations(invs);
+      setResidents(res);
 
       const vendorIds = [...new Set(avs.map(av => av.vendor_id))];
       const vMap = {};
@@ -190,6 +195,12 @@ export default function AssociationDashboard() {
           >
             <Send size={14} /> Invite a Vendor
           </button>
+          <button
+            onClick={() => setResidentModal(true)}
+            className="flex items-center gap-1.5 border border-teal text-teal-dark text-sm font-bold px-4 py-2 rounded-lg hover:bg-teal/10 transition-colors"
+          >
+            <UserPlus size={14} /> Invite Residents
+          </button>
         </div>
       </div>
 
@@ -314,6 +325,59 @@ export default function AssociationDashboard() {
           )}
         </div>
       </div>
+
+      {/* Resident Management */}
+      <div className="bg-white rounded-2xl border border-sand-dark p-6 mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-navy font-bold">Resident Management</h3>
+          <span className="text-body-brown text-sm">{residents.length} registered</span>
+        </div>
+        <div className="mb-4">
+          <label className="block text-navy font-medium text-sm mb-1.5">Resident signup link</label>
+          <div className="flex gap-2">
+            <input readOnly value={association?.resident_signup_link || ""} className="flex-1 border border-sand-dark rounded-lg px-4 py-2.5 text-body-brown text-sm bg-sand" />
+            <button type="button" onClick={() => { navigator.clipboard.writeText(association?.resident_signup_link || ""); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+              className="flex items-center gap-1.5 bg-navy text-white px-3 py-2.5 rounded-lg text-xs font-semibold hover:bg-navy-mid transition-colors">
+              {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy</>}
+            </button>
+          </div>
+        </div>
+        {residents.length > 0 ? (
+          <div className="space-y-1 max-h-48 overflow-y-auto">
+            {residents.map(r => (
+              <div key={r.id} className="flex items-center justify-between text-sm py-1.5 border-b border-sand last:border-0">
+                <span className="text-navy font-medium">{r.first_name} {r.last_name}</span>
+                <span className="text-body-brown text-xs">Unit {r.unit_number} · {r.resident_type}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-body-brown text-sm">No residents registered yet. Share the signup link above to invite them.</p>
+        )}
+      </div>
+
+      {/* Resident Invite Modal */}
+      {residentModal && (
+        <div className="fixed inset-0 bg-navy/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-navy font-bold">Invite Residents</h3>
+              <button onClick={() => setResidentModal(false)}><X size={18} className="text-body-brown" /></button>
+            </div>
+            <p className="text-body-brown text-sm mb-4">Share this link with your residents so they can sign up and access the approved vendor directory.</p>
+            <div className="flex gap-2 mb-4">
+              <input readOnly value={association?.resident_signup_link || ""} className="flex-1 border border-sand-dark rounded-lg px-4 py-2.5 text-body-brown text-sm bg-sand" />
+              <button onClick={() => { navigator.clipboard.writeText(association?.resident_signup_link || ""); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+                className="flex items-center gap-1.5 bg-navy text-white px-3 py-2.5 rounded-lg text-xs font-semibold hover:bg-navy-mid transition-colors">
+                {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy</>}
+              </button>
+            </div>
+            <button onClick={() => setResidentModal(false)} className="w-full border border-sand-dark text-navy font-medium py-2.5 rounded-xl text-sm hover:bg-sand transition-colors">
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Reject Modal */}
       {rejectModal && (
