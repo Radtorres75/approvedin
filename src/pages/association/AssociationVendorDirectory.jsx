@@ -87,20 +87,38 @@ export default function AssociationVendorDirectory() {
     e.preventDefault();
     setInviteLoading(true); setInviteMsg("");
     try {
+      // Validate inputs
+      if ((invite.method === "email" || invite.method === "both") && (!invite.email.trim() || !invite.email.includes("@"))) {
+        setInviteMsg("Please enter a valid email address.");
+        return;
+      }
+      if ((invite.method === "sms" || invite.method === "both") && !invite.phone.trim()) {
+        setInviteMsg("Please enter a phone number.");
+        return;
+      }
+
       const link = `${window.location.origin}/portal/vendor/setup?association=${association.id}`;
       const inv = await base44.entities.VendorInvitation.create({
         association_id: association.id,
-        recipient_email: invite.email || null,
-        recipient_phone: invite.phone || null,
+        recipient_email: invite.email.trim() || null,
+        recipient_phone: invite.phone.trim() || null,
         invitation_method: invite.method,
         registration_link: link,
         status: "pending",
+        sent_at: new Date().toISOString(),
       });
-      await base44.functions.invoke("sendVendorInvitation", { invitation_id: inv.id });
-      setInviteMsg("Invitation sent successfully!");
+
+      const result = await base44.functions.invoke("sendVendorInvitation", { invitation_id: inv.id });
+
+      if (result?.data?.success === false) {
+        throw new Error(result?.data?.error || "Delivery failed");
+      }
+
+      setInviteMsg("success");
       setInvite({ email: "", phone: "", method: "email" });
+      setTimeout(() => { setInviteModal(false); setInviteMsg(""); }, 2000);
     } catch (err) {
-      setInviteMsg("Failed to send invitation. Please try again.");
+      setInviteMsg(err?.message || "Failed to send invitation. Please try again.");
     } finally { setInviteLoading(false); }
   };
 
@@ -307,8 +325,13 @@ export default function AssociationVendorDirectory() {
               <h3 className="text-navy font-bold text-lg">Invite a Vendor</h3>
               <button onClick={() => setInviteModal(false)}><X size={18} className="text-body-brown" /></button>
             </div>
-            {inviteMsg && (
-              <div className={`text-sm px-4 py-3 rounded-lg mb-4 ${inviteMsg.includes("success") ? "bg-teal/10 text-teal-dark border border-teal/20" : "bg-red-50 text-red-700 border border-red-100"}`}>
+            {inviteMsg === "success" && (
+              <div className="text-sm px-4 py-3 rounded-lg mb-4 bg-teal/10 text-teal-dark border border-teal/20">
+                ✓ Invitation sent successfully.
+              </div>
+            )}
+            {inviteMsg && inviteMsg !== "success" && (
+              <div className="text-sm px-4 py-3 rounded-lg mb-4 bg-red-50 text-red-700 border border-red-100">
                 {inviteMsg}
               </div>
             )}
