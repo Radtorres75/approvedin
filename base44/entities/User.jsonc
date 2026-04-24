@@ -5,33 +5,13 @@
     "role": {
       "type": "string",
       "enum": [
+        "admin",
+        "user",
         "association_manager",
         "vendor",
         "resident"
       ],
-      "description": "User role - set at registration, never changes"
-    },
-    "first_name": {
-      "type": "string"
-    },
-    "last_name": {
-      "type": "string"
-    },
-    "phone_number": {
-      "type": "string"
-    },
-    "profile_complete": {
-      "type": "boolean",
-      "default": false
-    },
-    "is_active": {
-      "type": "boolean",
-      "default": true
-    },
-    "last_login_at": {
-      "type": "string",
-      "format": "date-time"
+      "default": "user"
     }
-  },
-  "required": []
+  }
 }
