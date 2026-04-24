@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         from: "ApprovedIn Contact Form <onboarding@resend.dev>",
-        to: ["support@approvedin.com"],
+        to: ["radamestorres75@gmail.com"],
         reply_to: email,
         subject: `[Contact Form] ${subject}`,
         html: `

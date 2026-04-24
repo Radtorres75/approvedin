@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "ApprovedIn <onboarding@resend.dev>",
+            from: "ApprovedIn Invitations <onboarding@resend.dev>",
             to: [invitation.recipient_email],
             subject: `You've been invited to join ${assocName}'s approved vendor directory`,
             html: `
