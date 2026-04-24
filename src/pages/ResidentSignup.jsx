@@ -10,6 +10,7 @@ const FormField = ({ label, error, children }) => (
     {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
   </div>
 );
+const S2Field = FormField;
 import { Link } from "react-router-dom";
 
 const STEPS = ["Find Community", "Your Unit", "Create Account"];
@@ -26,11 +27,14 @@ export default function ResidentSignup() {
   const [associations, setAssociations] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAssoc, setSelectedAssoc] = useState(null);
-  const [s2, setS2] = useState({ unit_number: "", resident_type: "" });
+  const [s2, setS2] = useState({
+    street_address: "", unit_number: "", city: "", zip_code: "",
+    resident_type: "", primary_phone: "", secondary_phone: "",
+    email: "", move_in_date: ""
+  });
+  const [s2Errors, setS2Errors] = useState({});
   const [s3, setS3] = useState({
-    first_name: "", last_name: "", email: "", phone_number: "", secondary_phone: "",
-    street_address: "", unit_apt: "", city: "", zip_code: "",
-    ownership_status: "", password: "", confirm_password: "", tos: false
+    first_name: "", last_name: "", password: "", confirm_password: "", tos: false
   });
   const [fieldErrors, setFieldErrors] = useState({});
 
@@ -70,20 +74,33 @@ export default function ResidentSignup() {
     return { text: "Something went wrong. Please try again or contact support@approvedin.com" };
   };
 
+  const validateStep2 = () => {
+    const errs = {};
+    if (!s2.street_address.trim()) errs.street_address = "Street address is required.";
+    if (!s2.city.trim()) errs.city = "City is required.";
+    if (!s2.zip_code.trim() || s2.zip_code.length !== 5) errs.zip_code = "A valid 5-digit ZIP code is required.";
+    if (!s2.resident_type) errs.resident_type = "Please select your resident / owner type.";
+    if (!s2.primary_phone.trim()) errs.primary_phone = "Primary phone number is required.";
+    if (!s2.email.trim() || !s2.email.includes("@")) errs.email = "A valid email address is required.";
+    return errs;
+  };
+
   const validateStep3 = () => {
     const errs = {};
     if (!s3.first_name.trim()) errs.first_name = "First name is required.";
     if (!s3.last_name.trim()) errs.last_name = "Last name is required.";
-    if (!s3.email.trim() || !s3.email.includes("@")) errs.email = "A valid email address is required.";
-    if (!s3.phone_number.trim()) errs.phone_number = "Phone number is required.";
-    if (!s3.street_address.trim()) errs.street_address = "Street address is required.";
-    if (!s3.city.trim()) errs.city = "City is required.";
-    if (!s3.zip_code.trim() || s3.zip_code.length !== 5) errs.zip_code = "A valid 5-digit ZIP code is required.";
-    if (!s3.ownership_status) errs.ownership_status = "Please select your ownership / occupancy status.";
     if (s3.password.length < 8) errs.password = "Password must be at least 8 characters.";
     if (s3.password !== s3.confirm_password) errs.confirm_password = "Passwords do not match.";
     if (!s3.tos) errs.tos = "Please accept the Terms of Service.";
     return errs;
+  };
+
+  const handleAdvanceStep2 = () => {
+    const errs = validateStep2();
+    if (Object.keys(errs).length > 0) { setS2Errors(errs); return; }
+    setS2Errors({});
+    setError("");
+    setStep(3);
   };
 
   const handleCreateAccount = async (e) => {
@@ -94,13 +111,13 @@ export default function ResidentSignup() {
     setLoading(true); setError("");
     try {
       await base44.auth.register({
-        email: s3.email,
+        email: s2.email,
         password: s3.password,
         first_name: s3.first_name,
         last_name: s3.last_name,
         role: "resident",
       });
-      setPendingEmail(s3.email);
+      setPendingEmail(s2.email);
       setPendingPassword(s3.password);
       setStep("verify");
     } catch (err) {
@@ -124,17 +141,21 @@ export default function ResidentSignup() {
         await base44.auth.updateMe({ role: "resident" });
       }
 
-      const fullAddress = [s3.street_address, s3.unit_apt, s3.city, "FL", s3.zip_code].filter(Boolean).join(", ");
       const resident = await base44.entities.Resident.create({
         user_id: user.id,
         association_id: selectedAssoc.id,
         first_name: s3.first_name,
         last_name: s3.last_name,
-        email: s3.email,
-        phone_number: s3.phone_number,
-        address: fullAddress,
-        unit_number: s2.unit_number || s3.unit_apt,
-        resident_type: s2.resident_type || s3.ownership_status,
+        email: s2.email,
+        street_address: s2.street_address,
+        unit_number: s2.unit_number,
+        city: s2.city,
+        state: "FL",
+        zip_code: s2.zip_code,
+        resident_type: s2.resident_type,
+        primary_phone: s2.primary_phone,
+        secondary_phone: s2.secondary_phone || "",
+        move_in_date: s2.move_in_date || null,
       });
       if (!resident || !resident.id) throw new Error("Account created but resident profile could not be saved. Please log in to continue.");
       setStep("confirmed");
@@ -223,30 +244,84 @@ export default function ResidentSignup() {
 
             {/* STEP 2: Your Unit */}
             {step === 2 && (
-              <div className="space-y-5">
-                <div>
+              <div className="space-y-4">
+                <div className="mb-2">
                   <h2 className="text-2xl font-black text-navy mb-1">Your unit</h2>
                   {selectedAssoc && <p className="text-body-brown text-sm">{selectedAssoc.association_name}</p>}
                 </div>
-                <div>
-                  <label className="block text-navy font-medium text-sm mb-1.5">Unit number *</label>
-                  <input type="text" value={s2.unit_number} onChange={e => setS2({...s2, unit_number: e.target.value})}
-                    className="w-full border border-sand-dark rounded-lg px-4 py-3 text-navy text-sm focus:outline-none focus:ring-2 focus:ring-teal/30" placeholder="e.g. 4B, 201, Unit 12" />
+
+                {/* Street Address */}
+                <S2Field label="Street Address *" error={s2Errors.street_address}>
+                  <input type="text" value={s2.street_address} onChange={e => setS2({...s2, street_address: e.target.value})}
+                    placeholder="123 Ocean Drive" className={inputCls(s2Errors.street_address)} />
+                </S2Field>
+
+                {/* Unit / City row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <S2Field label="Unit / Apt # (optional)">
+                    <input type="text" value={s2.unit_number} onChange={e => setS2({...s2, unit_number: e.target.value})}
+                      placeholder="e.g. 4B" className={inputCls()} />
+                  </S2Field>
+                  <S2Field label="City *" error={s2Errors.city}>
+                    <input type="text" value={s2.city} onChange={e => setS2({...s2, city: e.target.value})}
+                      placeholder="e.g. Miami" className={inputCls(s2Errors.city)} />
+                  </S2Field>
                 </div>
-                <div>
-                  <label className="block text-navy font-medium text-sm mb-2">Resident type *</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[{ val: "owner", label: "🏠 Owner", desc: "Unit owner" }, { val: "tenant", label: "🔑 Tenant", desc: "Renter / tenant" }].map(opt => (
-                      <button key={opt.val} type="button" onClick={() => setS2({...s2, resident_type: opt.val})}
-                        className={`py-4 rounded-xl border-2 font-medium text-sm transition-colors ${s2.resident_type === opt.val ? "border-teal bg-teal/5 text-navy" : "border-sand-dark text-body-brown hover:border-teal/30"}`}>
-                        <div>{opt.label}</div>
-                        <div className="text-xs mt-0.5 font-normal">{opt.desc}</div>
-                      </button>
-                    ))}
-                  </div>
+
+                {/* State / ZIP row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <S2Field label="State">
+                    <input type="text" value="FL" readOnly tabIndex={-1}
+                      className="w-full border border-sand-dark rounded-lg px-4 py-3 text-body-brown text-sm bg-sand cursor-not-allowed select-none pointer-events-none" />
+                  </S2Field>
+                  <S2Field label="ZIP Code *" error={s2Errors.zip_code}>
+                    <input type="text" inputMode="numeric" value={s2.zip_code} maxLength={5}
+                      onChange={e => setS2({...s2, zip_code: e.target.value.replace(/\D/g, "").slice(0, 5)})}
+                      placeholder="e.g. 33101" className={inputCls(s2Errors.zip_code)} />
+                  </S2Field>
                 </div>
-                <button onClick={() => { if (!s2.unit_number || !s2.resident_type) { setError("Please fill in all fields."); return; } setError(""); setStep(3); }}
-                  className="w-full bg-navy text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-navy-mid transition-colors">
+
+                {/* Resident / Owner Type */}
+                <S2Field label="I am a *" error={s2Errors.resident_type}>
+                  <select value={s2.resident_type} onChange={e => setS2({...s2, resident_type: e.target.value})}
+                    className={inputCls(s2Errors.resident_type)}>
+                    <option value="">Select...</option>
+                    {[
+                      "Unit Owner","Co-Owner","Shareholder (Co-op)","Slip Owner (Dockominium)",
+                      "Lot Owner / Mobile Home Owner","Homeowner","Tenant / Renter","Authorized Occupant",
+                      "Sublessee","Live-aboard Resident","Investor Owner (non-occupying)",
+                      "Estate / Trust Representative","Corporate Owner Representative",
+                      "Property Manager","Board Member","Developer / Builder Owner"
+                    ].map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </S2Field>
+
+                {/* Phone row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <S2Field label="Primary Phone *" error={s2Errors.primary_phone}>
+                    <input type="tel" value={s2.primary_phone} onChange={e => setS2({...s2, primary_phone: e.target.value})}
+                      placeholder="(305) 555-0100" className={inputCls(s2Errors.primary_phone)} />
+                  </S2Field>
+                  <S2Field label="Secondary Phone (optional)">
+                    <input type="tel" value={s2.secondary_phone} onChange={e => setS2({...s2, secondary_phone: e.target.value})}
+                      placeholder="(786) 555-0200" className={inputCls()} />
+                  </S2Field>
+                </div>
+
+                {/* Email */}
+                <S2Field label="Email Address *" error={s2Errors.email}>
+                  <input type="email" value={s2.email} onChange={e => setS2({...s2, email: e.target.value})}
+                    placeholder="you@example.com" className={inputCls(s2Errors.email)} />
+                </S2Field>
+
+                {/* Move-in Date */}
+                <S2Field label="Move-in Date (optional)">
+                  <input type="date" value={s2.move_in_date} onChange={e => setS2({...s2, move_in_date: e.target.value})}
+                    className={inputCls()} />
+                </S2Field>
+
+                <button type="button" onClick={handleAdvanceStep2}
+                  className="w-full bg-navy text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-navy-mid transition-colors mt-2">
                   Continue <ChevronRight size={16} />
                 </button>
               </div>
@@ -257,7 +332,6 @@ export default function ResidentSignup() {
               <form onSubmit={handleCreateAccount} className="space-y-4">
                 <h2 className="text-2xl font-black text-navy mb-4">Create your account</h2>
 
-                {/* Name */}
                 <div className="grid grid-cols-2 gap-3">
                   <FormField label="First Name *" error={fieldErrors.first_name}>
                     <input type="text" value={s3.first_name} onChange={e => setS3({...s3, first_name: e.target.value})} placeholder="Jane" className={inputCls(fieldErrors.first_name)} />
@@ -267,53 +341,6 @@ export default function ResidentSignup() {
                   </FormField>
                 </div>
 
-                {/* Address */}
-                <FormField label="Street Address *" error={fieldErrors.street_address}>
-                  <input type="text" value={s3.street_address} onChange={e => setS3({...s3, street_address: e.target.value})} placeholder="123 Ocean Drive" className={inputCls(fieldErrors.street_address)} />
-                </FormField>
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField label="Unit / Apt # (optional)">
-                    <input type="text" value={s3.unit_apt} onChange={e => setS3({...s3, unit_apt: e.target.value})} placeholder="e.g. 4B" className={inputCls()} />
-                  </FormField>
-                  <FormField label="City *" error={fieldErrors.city}>
-                    <input type="text" value={s3.city} onChange={e => setS3({...s3, city: e.target.value})} placeholder="e.g. Miami" className={inputCls(fieldErrors.city)} />
-                  </FormField>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField label="State">
-                    <input type="text" value="FL" readOnly className="w-full border border-sand-dark rounded-lg px-4 py-3 text-body-brown text-sm bg-sand cursor-not-allowed" />
-                  </FormField>
-                  <FormField label="ZIP Code *" error={fieldErrors.zip_code}>
-                    <input type="text" inputMode="numeric" value={s3.zip_code} maxLength={5}
-                      onChange={e => setS3({...s3, zip_code: e.target.value.replace(/\D/g, "").slice(0, 5)})}
-                      placeholder="e.g. 33101" className={inputCls(fieldErrors.zip_code)} />
-                  </FormField>
-                </div>
-
-                {/* Contact */}
-                <FormField label="Email Address *" error={fieldErrors.email}>
-                  <input type="email" value={s3.email} onChange={e => setS3({...s3, email: e.target.value})} placeholder="you@example.com" className={inputCls(fieldErrors.email)} />
-                </FormField>
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField label="Phone Number *" error={fieldErrors.phone_number}>
-                    <input type="tel" value={s3.phone_number} onChange={e => setS3({...s3, phone_number: e.target.value})} placeholder="(305) 555-0100" className={inputCls(fieldErrors.phone_number)} />
-                  </FormField>
-                  <FormField label="Secondary Phone (optional)">
-                    <input type="tel" value={s3.secondary_phone} onChange={e => setS3({...s3, secondary_phone: e.target.value})} placeholder="(305) 555-0100" className={inputCls()} />
-                  </FormField>
-                </div>
-
-                {/* Ownership */}
-                <FormField label="I am a *" error={fieldErrors.ownership_status}>
-                  <select value={s3.ownership_status} onChange={e => setS3({...s3, ownership_status: e.target.value})} className={inputCls(fieldErrors.ownership_status)}>
-                    <option value="">Select...</option>
-                    {["Unit Owner","Co-Owner","Shareholder (Co-op)","Slip Owner (Dockominium)","Lot Owner / Mobile Home Owner","Homeowner","Tenant / Renter","Authorized Occupant","Sublessee","Live-aboard Resident","Investor Owner (non-occupying)","Estate / Trust Representative","Corporate Owner","Representative","Property Manager","Board Member","Developer / Builder Owner"].map(o => (
-                      <option key={o} value={o}>{o}</option>
-                    ))}
-                  </select>
-                </FormField>
-
-                {/* Password */}
                 <FormField label="Password * (min 8 characters)" error={fieldErrors.password}>
                   <div className="relative">
                     <input type={showPw ? "text" : "password"} value={s3.password} onChange={e => setS3({...s3, password: e.target.value})} className={inputCls(fieldErrors.password)} />
