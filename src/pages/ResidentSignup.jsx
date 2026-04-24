@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { CheckCircle, ChevronRight, Search, Eye, EyeOff, ShieldCheck } from "lucide-react";
+
+const inputCls = (err) => `w-full border ${err ? "border-red-400" : "border-sand-dark"} rounded-lg px-4 py-3 text-navy text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 bg-white`;
+const FormField = ({ label, error, children }) => (
+  <div>
+    <label className="block text-navy font-medium text-sm mb-1.5">{label}</label>
+    {children}
+    {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
+  </div>
+);
 import { Link } from "react-router-dom";
 
 const STEPS = ["Find Community", "Your Unit", "Create Account"];
@@ -18,7 +27,12 @@ export default function ResidentSignup() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAssoc, setSelectedAssoc] = useState(null);
   const [s2, setS2] = useState({ unit_number: "", resident_type: "" });
-  const [s3, setS3] = useState({ first_name: "", last_name: "", email: "", phone_number: "", address: "", password: "", confirm_password: "", tos: false });
+  const [s3, setS3] = useState({
+    first_name: "", last_name: "", email: "", phone_number: "", secondary_phone: "",
+    street_address: "", unit_apt: "", city: "", zip_code: "",
+    ownership_status: "", password: "", confirm_password: "", tos: false
+  });
+  const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -56,11 +70,27 @@ export default function ResidentSignup() {
     return { text: "Something went wrong. Please try again or contact support@approvedin.com" };
   };
 
+  const validateStep3 = () => {
+    const errs = {};
+    if (!s3.first_name.trim()) errs.first_name = "First name is required.";
+    if (!s3.last_name.trim()) errs.last_name = "Last name is required.";
+    if (!s3.email.trim() || !s3.email.includes("@")) errs.email = "A valid email address is required.";
+    if (!s3.phone_number.trim()) errs.phone_number = "Phone number is required.";
+    if (!s3.street_address.trim()) errs.street_address = "Street address is required.";
+    if (!s3.city.trim()) errs.city = "City is required.";
+    if (!s3.zip_code.trim() || s3.zip_code.length !== 5) errs.zip_code = "A valid 5-digit ZIP code is required.";
+    if (!s3.ownership_status) errs.ownership_status = "Please select your ownership / occupancy status.";
+    if (s3.password.length < 8) errs.password = "Password must be at least 8 characters.";
+    if (s3.password !== s3.confirm_password) errs.confirm_password = "Passwords do not match.";
+    if (!s3.tos) errs.tos = "Please accept the Terms of Service.";
+    return errs;
+  };
+
   const handleCreateAccount = async (e) => {
     e.preventDefault();
-    if (!s3.tos) { setError("Please accept the Terms of Service."); return; }
-    if (s3.password.length < 8) { setError("Your password must be at least 8 characters."); return; }
-    if (s3.password !== s3.confirm_password) { setError("Passwords do not match."); return; }
+    const errs = validateStep3();
+    if (Object.keys(errs).length > 0) { setFieldErrors(errs); return; }
+    setFieldErrors({});
     setLoading(true); setError("");
     try {
       await base44.auth.register({
@@ -94,6 +124,7 @@ export default function ResidentSignup() {
         await base44.auth.updateMe({ role: "resident" });
       }
 
+      const fullAddress = [s3.street_address, s3.unit_apt, s3.city, "FL", s3.zip_code].filter(Boolean).join(", ");
       const resident = await base44.entities.Resident.create({
         user_id: user.id,
         association_id: selectedAssoc.id,
@@ -101,12 +132,12 @@ export default function ResidentSignup() {
         last_name: s3.last_name,
         email: s3.email,
         phone_number: s3.phone_number,
-        address: s3.address,
-        unit_number: s2.unit_number,
-        resident_type: s2.resident_type,
+        address: fullAddress,
+        unit_number: s2.unit_number || s3.unit_apt,
+        resident_type: s2.resident_type || s3.ownership_status,
       });
       if (!resident || !resident.id) throw new Error("Account created but resident profile could not be saved. Please log in to continue.");
-      window.location.href = "/portal/resident/dashboard";
+      setStep("confirmed");
     } catch (err) {
       const msg = err?.message || err?.toString() || "";
       setError(msg && !msg.toLowerCase().includes("object object") ? msg : "Verification succeeded but login failed. Please try logging in.");
@@ -225,29 +256,89 @@ export default function ResidentSignup() {
             {step === 3 && (
               <form onSubmit={handleCreateAccount} className="space-y-4">
                 <h2 className="text-2xl font-black text-navy mb-4">Create your account</h2>
+
+                {/* Name */}
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="First name *" value={s3.first_name} onChange={v => setS3({...s3, first_name: v})} required />
-                  <Field label="Last name *" value={s3.last_name} onChange={v => setS3({...s3, last_name: v})} required />
+                  <FormField label="First Name *" error={fieldErrors.first_name}>
+                    <input type="text" value={s3.first_name} onChange={e => setS3({...s3, first_name: e.target.value})} placeholder="Jane" className={inputCls(fieldErrors.first_name)} />
+                  </FormField>
+                  <FormField label="Last Name *" error={fieldErrors.last_name}>
+                    <input type="text" value={s3.last_name} onChange={e => setS3({...s3, last_name: e.target.value})} placeholder="Smith" className={inputCls(fieldErrors.last_name)} />
+                  </FormField>
                 </div>
-                <Field label="Email *" type="email" value={s3.email} onChange={v => setS3({...s3, email: v})} required />
-                <Field label="Phone number *" value={s3.phone_number} onChange={v => setS3({...s3, phone_number: v})} required />
-                <Field label="Address *" value={s3.address} onChange={v => setS3({...s3, address: v})} required />
-                <div className="relative">
-                  <Field label="Password * (min 8 characters)" type={showPw ? "text" : "password"} value={s3.password} onChange={v => setS3({...s3, password: v})} required />
-                  <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-8 text-body-brown hover:text-navy">
-                    {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
+
+                {/* Address */}
+                <FormField label="Street Address *" error={fieldErrors.street_address}>
+                  <input type="text" value={s3.street_address} onChange={e => setS3({...s3, street_address: e.target.value})} placeholder="123 Ocean Drive" className={inputCls(fieldErrors.street_address)} />
+                </FormField>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField label="Unit / Apt # (optional)">
+                    <input type="text" value={s3.unit_apt} onChange={e => setS3({...s3, unit_apt: e.target.value})} placeholder="e.g. 4B" className={inputCls()} />
+                  </FormField>
+                  <FormField label="City *" error={fieldErrors.city}>
+                    <input type="text" value={s3.city} onChange={e => setS3({...s3, city: e.target.value})} placeholder="e.g. Miami" className={inputCls(fieldErrors.city)} />
+                  </FormField>
                 </div>
-                <div className="relative">
-                  <Field label="Confirm password *" type={showPw2 ? "text" : "password"} value={s3.confirm_password} onChange={v => setS3({...s3, confirm_password: v})} required />
-                  <button type="button" onClick={() => setShowPw2(!showPw2)} className="absolute right-3 top-8 text-body-brown hover:text-navy">
-                    {showPw2 ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField label="State">
+                    <input type="text" value="FL" readOnly className="w-full border border-sand-dark rounded-lg px-4 py-3 text-body-brown text-sm bg-sand cursor-not-allowed" />
+                  </FormField>
+                  <FormField label="ZIP Code *" error={fieldErrors.zip_code}>
+                    <input type="text" inputMode="numeric" value={s3.zip_code} maxLength={5}
+                      onChange={e => setS3({...s3, zip_code: e.target.value.replace(/\D/g, "").slice(0, 5)})}
+                      placeholder="e.g. 33101" className={inputCls(fieldErrors.zip_code)} />
+                  </FormField>
                 </div>
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input type="checkbox" checked={s3.tos} onChange={e => setS3({...s3, tos: e.target.checked})} className="mt-0.5 accent-teal" required />
-                  <span className="text-sm text-body-brown">I agree to the <a href="/terms" className="text-teal-dark underline" target="_blank">Terms of Service</a> and <a href="/privacy" className="text-teal-dark underline" target="_blank">Privacy Policy</a></span>
-                </label>
+
+                {/* Contact */}
+                <FormField label="Email Address *" error={fieldErrors.email}>
+                  <input type="email" value={s3.email} onChange={e => setS3({...s3, email: e.target.value})} placeholder="you@example.com" className={inputCls(fieldErrors.email)} />
+                </FormField>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField label="Phone Number *" error={fieldErrors.phone_number}>
+                    <input type="tel" value={s3.phone_number} onChange={e => setS3({...s3, phone_number: e.target.value})} placeholder="(305) 555-0100" className={inputCls(fieldErrors.phone_number)} />
+                  </FormField>
+                  <FormField label="Secondary Phone (optional)">
+                    <input type="tel" value={s3.secondary_phone} onChange={e => setS3({...s3, secondary_phone: e.target.value})} placeholder="(305) 555-0100" className={inputCls()} />
+                  </FormField>
+                </div>
+
+                {/* Ownership */}
+                <FormField label="I am a *" error={fieldErrors.ownership_status}>
+                  <select value={s3.ownership_status} onChange={e => setS3({...s3, ownership_status: e.target.value})} className={inputCls(fieldErrors.ownership_status)}>
+                    <option value="">Select...</option>
+                    {["Unit Owner","Co-Owner","Shareholder (Co-op)","Slip Owner (Dockominium)","Lot Owner / Mobile Home Owner","Homeowner","Tenant / Renter","Authorized Occupant","Sublessee","Live-aboard Resident","Investor Owner (non-occupying)","Estate / Trust Representative","Corporate Owner","Representative","Property Manager","Board Member","Developer / Builder Owner"].map(o => (
+                      <option key={o} value={o}>{o}</option>
+                    ))}
+                  </select>
+                </FormField>
+
+                {/* Password */}
+                <FormField label="Password * (min 8 characters)" error={fieldErrors.password}>
+                  <div className="relative">
+                    <input type={showPw ? "text" : "password"} value={s3.password} onChange={e => setS3({...s3, password: e.target.value})} className={inputCls(fieldErrors.password)} />
+                    <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-3 text-body-brown hover:text-navy">
+                      {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </FormField>
+                <FormField label="Confirm Password *" error={fieldErrors.confirm_password}>
+                  <div className="relative">
+                    <input type={showPw2 ? "text" : "password"} value={s3.confirm_password} onChange={e => setS3({...s3, confirm_password: e.target.value})} className={inputCls(fieldErrors.confirm_password)} />
+                    <button type="button" onClick={() => setShowPw2(!showPw2)} className="absolute right-3 top-3 text-body-brown hover:text-navy">
+                      {showPw2 ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </FormField>
+
+                <div>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" checked={s3.tos} onChange={e => setS3({...s3, tos: e.target.checked})} className="mt-0.5 accent-teal" />
+                    <span className="text-sm text-body-brown">I agree to the <a href="/terms" className="text-teal-dark underline" target="_blank">Terms of Service</a> and <a href="/privacy" className="text-teal-dark underline" target="_blank">Privacy Policy</a></span>
+                  </label>
+                  {fieldErrors.tos && <p className="text-red-600 text-xs mt-1">{fieldErrors.tos}</p>}
+                </div>
+
                 <button type="submit" disabled={loading} className="w-full bg-navy hover:bg-navy-mid text-white font-bold py-3 rounded-xl text-sm disabled:opacity-60 flex items-center justify-center gap-2">
                   {loading ? "Creating account..." : <>Complete Signup <ChevronRight size={16} /></>}
                 </button>
@@ -255,6 +346,22 @@ export default function ResidentSignup() {
                   Already have an account? <Link to="/signin" className="text-teal-dark font-semibold hover:underline">Log In</Link>
                 </p>
               </form>
+            )}
+
+            {/* CONFIRMED */}
+            {step === "confirmed" && (
+              <div className="text-center py-6 space-y-4">
+                <div className="w-16 h-16 bg-teal/10 rounded-full flex items-center justify-center mx-auto">
+                  <CheckCircle size={32} className="text-teal-dark" />
+                </div>
+                <h2 className="text-2xl font-black text-navy">Welcome to ApprovedIn.</h2>
+                <p className="text-body-brown text-sm leading-relaxed">
+                  Your profile has been created. Your community administrator will verify your residency shortly.
+                </p>
+                <a href="/portal/resident/dashboard" className="inline-flex items-center gap-2 bg-navy text-white font-bold px-6 py-3 rounded-xl text-sm hover:bg-navy-mid transition-colors">
+                  Go to Dashboard <ChevronRight size={16} />
+                </a>
+              </div>
             )}
           </div>
         </div>

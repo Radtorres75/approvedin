@@ -50,6 +50,9 @@
     "logo_url": {
       "type": "string"
     },
+    "sample_coi_url": {
+      "type": "string"
+    },
     "subscription_tier": {
       "type": "string",
       "default": "free"
@@ -91,5 +94,31 @@
   "required": [
     "user_id",
     "association_name"
-  ]
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.onboarding_complete": true
+        }
+      ]
+    },
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    }
+  }
 }

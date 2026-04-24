@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import AssociationLayout from "@/components/layout/AssociationLayout";
 import { FLORIDA_COUNTIES, ASSOCIATION_TYPES } from "@/lib/constants";
-import { Copy, Check, RefreshCw } from "lucide-react";
+import { Copy, Check, RefreshCw, Upload, X, ExternalLink } from "lucide-react";
 
 export default function AssociationSettingsPage() {
   const navigate = useNavigate();
@@ -15,6 +15,8 @@ export default function AssociationSettingsPage() {
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const [residents, setResidents] = useState([]);
+  const [coiUploading, setCoiUploading] = useState(false);
+  const [coiMsg, setCoiMsg] = useState("");
 
   useEffect(() => { loadPage(); }, []);
 
@@ -53,6 +55,24 @@ export default function AssociationSettingsPage() {
     navigator.clipboard.writeText(assoc?.resident_signup_link || "");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCoiUpload = async (file) => {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { setCoiMsg("File must be under 10MB."); return; }
+    setCoiUploading(true); setCoiMsg("");
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    await base44.entities.Association.update(assoc.id, { sample_coi_url: file_url });
+    setAssoc(prev => ({ ...prev, sample_coi_url: file_url }));
+    setCoiMsg("Sample COI updated successfully");
+    setCoiUploading(false);
+  };
+
+  const handleCoiRemove = async () => {
+    if (!window.confirm("Are you sure you want to remove your sample COI? Vendors will no longer be able to see your COI requirements.")) return;
+    await base44.entities.Association.update(assoc.id, { sample_coi_url: "" });
+    setAssoc(prev => ({ ...prev, sample_coi_url: "" }));
+    setCoiMsg("Sample COI removed");
   };
 
   const Field = ({ label, value, onChange, type = "text", required, placeholder, readOnly }) => (
@@ -156,6 +176,43 @@ export default function AssociationSettingsPage() {
               </div>
             )}
             {residents.length === 0 && <p className="text-body-brown text-sm">No residents registered yet.</p>}
+          </div>
+
+          {/* Sample COI */}
+          <div className="bg-white rounded-2xl border border-sand-dark p-6 space-y-3">
+            <h3 className="text-navy font-bold text-base">Sample COI</h3>
+            {coiMsg && (
+              <div className={`text-sm px-4 py-2 rounded-lg ${coiMsg.includes("removed") ? "bg-sand text-body-brown" : "bg-teal/10 text-teal-dark"} border border-sand-dark`}>
+                {coiMsg}
+              </div>
+            )}
+            {assoc?.sample_coi_url ? (
+              <div className="flex items-center gap-3 flex-wrap">
+                <a href={assoc.sample_coi_url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-teal-dark text-sm font-semibold hover:underline">
+                  <ExternalLink size={14} /> View Current COI
+                </a>
+                <label className="flex items-center gap-1.5 cursor-pointer text-sm font-semibold text-navy border border-sand-dark px-3 py-1.5 rounded-lg hover:bg-sand transition-colors">
+                  <Upload size={14} /> Replace
+                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="sr-only"
+                    onChange={e => handleCoiUpload(e.target.files[0])} disabled={coiUploading} />
+                </label>
+                <button type="button" onClick={handleCoiRemove} disabled={coiUploading}
+                  className="flex items-center gap-1.5 text-sm font-semibold text-red-600 border border-red-100 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
+                  <X size={14} /> Remove
+                </button>
+              </div>
+            ) : (
+              <label className={`flex items-center gap-2 cursor-pointer w-fit border-2 border-dashed border-sand-dark rounded-xl px-5 py-4 hover:border-teal/50 transition-colors ${coiUploading ? "opacity-60 pointer-events-none" : ""}`}>
+                <Upload size={18} className="text-body-brown" />
+                <span className="text-navy font-semibold text-sm">{coiUploading ? "Uploading..." : "Upload Sample COI"}</span>
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="sr-only"
+                  onChange={e => handleCoiUpload(e.target.files[0])} disabled={coiUploading} />
+              </label>
+            )}
+            <p className="text-body-brown text-xs leading-relaxed">
+              Your sample COI shows vendors exactly what insurance documentation your community requires. Associations that provide a sample COI receive faster vendor applications.
+            </p>
           </div>
 
           {/* Save */}
