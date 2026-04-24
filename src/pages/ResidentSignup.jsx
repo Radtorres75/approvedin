@@ -86,10 +86,10 @@ export default function ResidentSignup() {
     setLoading(true); setError("");
     try {
       await base44.auth.loginViaEmailPassword(pendingEmail, pendingPassword);
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise(r => setTimeout(r, 800));
       const user = await base44.auth.me();
       if (!user || !user.id) throw new Error("Could not establish session.");
-      await base44.entities.Resident.create({
+      const resident = await base44.entities.Resident.create({
         user_id: user.id,
         association_id: selectedAssoc.id,
         first_name: s3.first_name,
@@ -100,9 +100,11 @@ export default function ResidentSignup() {
         unit_number: s2.unit_number,
         resident_type: s2.resident_type,
       });
+      if (!resident || !resident.id) throw new Error("Account created but resident profile could not be saved. Please log in to continue.");
       window.location.href = "/portal/resident/dashboard";
     } catch (err) {
-      setError("Verification succeeded but login failed. Please try logging in.");
+      const msg = err?.message || err?.toString() || "";
+      setError(msg && !msg.toLowerCase().includes("object object") ? msg : "Verification succeeded but login failed. Please try logging in.");
     } finally {
       setLoading(false);
     }

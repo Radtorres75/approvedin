@@ -105,7 +105,7 @@ export default function VendorSetup() {
     setLoading(true); setError("");
     try {
       await base44.auth.loginViaEmailPassword(pendingEmail, pendingPassword);
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise(r => setTimeout(r, 800));
       const user = await base44.auth.me();
       if (!user || !user.id) throw new Error("Could not establish session.");
       const today = new Date().toISOString().split("T")[0];
@@ -115,12 +115,14 @@ export default function VendorSetup() {
         setup_highest_completed_step: 0, profile_completion_percentage: 0,
         overall_compliance_status: "noncompliant", is_suspended: false,
       });
+      if (!v || !v.id) throw new Error("Account created but vendor profile could not be initialized. Please log in to continue.");
       setVendorId(v.id);
       setVendor(v);
       setInitLoading(false);
       setStep(1);
     } catch (err) {
-      setError("Verification succeeded but login failed. Please try logging in.");
+      const msg = err?.message || err?.toString() || "";
+      setError(msg && !msg.toLowerCase().includes("object object") ? msg : "Verification succeeded but login failed. Please try logging in.");
     } finally {
       setLoading(false);
     }

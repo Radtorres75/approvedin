@@ -26,20 +26,32 @@ export default function SignIn() {
         throw new Error("Session could not be established. Please try again.");
       }
 
-      // Route by role
-      if (user.role === "association_manager") {
+      // Route by profile entity (most reliable — doesn't depend on role field)
+      try {
         const assocs = await base44.entities.Association.filter({ user_id: user.id });
-        const assoc = assocs[0];
-        navigate((!assoc || !assoc.onboarding_complete) ? "/onboarding" : "/portal/association", { replace: true });
-      } else if (user.role === "vendor") {
+        if (assocs.length > 0) {
+          navigate(assocs[0].onboarding_complete ? "/portal/association" : "/onboarding", { replace: true });
+          return;
+        }
+      } catch {}
+
+      try {
         const vendors = await base44.entities.Vendor.filter({ user_id: user.id });
-        const vendor = vendors[0];
-        navigate((vendor && vendor.setup_highest_completed_step >= 8) ? "/portal/vendor" : "/portal/vendor/setup", { replace: true });
-      } else if (user.role === "resident") {
-        navigate("/portal/resident/dashboard", { replace: true });
-      } else {
-        navigate("/signin", { replace: true });
-      }
+        if (vendors.length > 0) {
+          navigate(vendors[0].setup_highest_completed_step >= 8 ? "/portal/vendor" : "/portal/vendor/setup", { replace: true });
+          return;
+        }
+      } catch {}
+
+      try {
+        const residents = await base44.entities.Resident.filter({ user_id: user.id });
+        if (residents.length > 0) {
+          navigate("/portal/resident/dashboard", { replace: true });
+          return;
+        }
+      } catch {}
+
+      setError("Your account was found but your profile is incomplete. Please sign up again or contact support@approvedin.com");
     } catch (err) {
       console.error("Login error:", err);
       const msg = err?.message || err?.error || err?.toString() || "";
@@ -140,12 +152,15 @@ export default function SignIn() {
               </form>
 
               <div className="mt-6 text-center space-y-3">
-                <p className="text-body-brown text-sm">Don't have an account yet?</p>
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <Link to="/onboarding" className="border border-sand-dark text-navy font-medium py-2 px-2 rounded-lg hover:bg-sand text-center transition-colors">Association</Link>
-                  <Link to="/portal/vendor/setup" className="border border-sand-dark text-navy font-medium py-2 px-2 rounded-lg hover:bg-sand text-center transition-colors">Vendor</Link>
-                  <Link to="/resident/signup" className="border border-sand-dark text-navy font-medium py-2 px-2 rounded-lg hover:bg-sand text-center transition-colors">Resident</Link>
-                </div>
+                <p className="text-body-brown text-sm">
+                  Don't have an account yet?{" "}
+                  <span
+                    onClick={() => window.location.href = "/"}
+                    className="text-teal-dark font-semibold cursor-pointer underline"
+                  >
+                    Sign up here
+                  </span>
+                </p>
               </div>
             </>
           )}

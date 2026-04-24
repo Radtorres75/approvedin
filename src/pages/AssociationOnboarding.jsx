@@ -68,7 +68,7 @@ export default function AssociationOnboarding() {
     setLoading(true); setError("");
     try {
       await base44.auth.loginViaEmailPassword(pendingEmail, pendingPassword);
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 800));
       const user = await base44.auth.me();
       if (!user || !user.id) throw new Error("Could not establish session. Please log in.");
       const assoc = await base44.entities.Association.create({
@@ -76,7 +76,12 @@ export default function AssociationOnboarding() {
         association_name: "",
         onboarding_complete: false,
         subscription_tier: "free",
+        require_coi: true,
+        require_trade_license: true,
+        require_workers_comp: true,
+        require_sunbiz: true,
       });
+      if (!assoc || !assoc.id) throw new Error("Account created but association profile could not be saved. Please log in to continue.");
       setAssocId(assoc.id);
       setStep(1);
     } catch (err) {
