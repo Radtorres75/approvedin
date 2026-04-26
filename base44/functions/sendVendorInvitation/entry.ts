@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
             html: `
               <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
                 <div style="background:#0d1b2a;padding:24px;border-radius:12px 12px 0 0;text-align:center;">
-                  <span style="color:#27c99a;font-size:24px;font-weight:900;">ApprovedIn</span>
+                  <img src="https://media.base44.com/images/public/69e9180b18cbe750b3daf184/9a7ce84a1_approvedin-logo-nav-transparent.png" alt="ApprovedIn" style="height:40px;width:auto;display:block;margin:0 auto;" />
                 </div>
                 <div style="padding:32px;background:#ffffff;border:1px solid #e8e1d6;border-top:none;">
                   <h2 style="color:#0d1b2a;margin-top:0;">You've Been Invited!</h2>

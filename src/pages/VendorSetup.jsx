@@ -297,12 +297,13 @@ export default function VendorSetup() {
   return (
     <div className="min-h-screen bg-cream flex flex-col">
       <nav className="bg-navy py-4 px-6">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-teal flex items-center justify-center">
-            <span className="text-navy font-black text-xs">A</span>
-          </div>
-          <span className="text-white font-bold text-base">ApprovedIn</span>
-          <span className="text-white/40 text-sm ml-2">— Vendor Setup</span>
+        <div className="flex items-center gap-3">
+          <img
+            src="https://media.base44.com/images/public/69e9180b18cbe750b3daf184/9a7ce84a1_approvedin-logo-nav-transparent.png"
+            alt="ApprovedIn"
+            style={{ height: "36px", width: "auto", objectFit: "contain", display: "block" }}
+          />
+          <span className="text-white/40 text-sm">— Vendor Setup</span>
         </div>
       </nav>
 
