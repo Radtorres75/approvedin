@@ -1,11 +1,10 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, useNavigate, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import { useEffect } from 'react';
 
 // Public pages
 import Home from './pages/Home';
@@ -44,20 +43,21 @@ import ResidentVendorDirectory from './pages/resident/ResidentVendorDirectory';
 import ResidentProfilePage from './pages/resident/ResidentProfilePage';
 import ResidentNotificationsPage from './pages/resident/ResidentNotificationsPage';
 
-// ProtectedRoute: waits for auth check to complete before deciding to redirect
+// Spinner shown while session is being established
+const LoadingSpinner = () => (
+  <div className="fixed inset-0 flex items-center justify-center bg-cream">
+    <div className="w-8 h-8 border-4 border-sand-dark border-t-teal rounded-full animate-spin"></div>
+  </div>
+);
+
+// Wraps any portal route — waits for auth check before deciding to redirect
 const ProtectedRoute = ({ children }) => {
   const { isLoadingAuth, isLoadingPublicSettings, isAuthenticated, authChecked } = useAuth();
 
-  // Still waiting for session — show spinner, do NOT redirect yet
   if (isLoadingAuth || isLoadingPublicSettings || !authChecked) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-cream">
-        <div className="w-8 h-8 border-4 border-sand-dark border-t-teal rounded-full animate-spin"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
-  // Auth check complete and user is not authenticated — soft redirect
   if (!isAuthenticated) {
     return <Navigate to="/signin" replace />;
   }
@@ -66,32 +66,21 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, authChecked, navigateRef } = useAuth();
-  const navigate = useNavigate();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, authChecked } = useAuth();
 
-  // Register the React Router navigate fn into AuthContext
-  // so navigateToLogin() uses soft navigation instead of window.location.href
-  useEffect(() => {
-    navigateRef.current = navigate;
-  }, [navigate, navigateRef]);
-
-  // Show spinner while session is being established — never redirect during this window
+  // Wait for session check to complete before rendering anything
   if (isLoadingPublicSettings || isLoadingAuth || !authChecked) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-cream">
-        <div className="w-8 h-8 border-4 border-sand-dark border-t-teal rounded-full animate-spin"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
-  // Only handle non-auth errors here — auth_required is handled per-route by ProtectedRoute
+  // Only surface non-auth errors globally (auth_required is handled per-route)
   if (authError && authError.type === 'user_not_registered') {
     return <UserNotRegisteredError />;
   }
 
   return (
     <Routes>
-      {/* Public routes — no auth required */}
+      {/* Public — no auth required */}
       <Route path="/" element={<Home />} />
       <Route path="/associations" element={<AssociationsLanding />} />
       <Route path="/vendors" element={<VendorsLanding />} />
@@ -104,7 +93,7 @@ const AuthenticatedApp = () => {
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
 
-      {/* Signup flows — auth not required (user is mid-registration) */}
+      {/* Signup flows — no auth required (user is mid-registration) */}
       <Route path="/onboarding" element={<AssociationOnboarding />} />
       <Route path="/portal/vendor/setup" element={<VendorSetup />} />
       <Route path="/resident/signup" element={<ResidentSignup />} />
@@ -143,7 +132,7 @@ function App() {
         <Toaster />
       </QueryClientProvider>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;
