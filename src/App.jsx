@@ -1,10 +1,11 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useNavigate, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import { useEffect } from 'react';
 
 // Public pages
 import Home from './pages/Home';
@@ -43,10 +44,12 @@ import ResidentVendorDirectory from './pages/resident/ResidentVendorDirectory';
 import ResidentProfilePage from './pages/resident/ResidentProfilePage';
 import ResidentNotificationsPage from './pages/resident/ResidentNotificationsPage';
 
-const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+// ProtectedRoute: waits for auth check to complete before deciding to redirect
+const ProtectedRoute = ({ children }) => {
+  const { isLoadingAuth, isLoadingPublicSettings, isAuthenticated, authChecked } = useAuth();
 
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  // Still waiting for session — show spinner, do NOT redirect yet
+  if (isLoadingAuth || isLoadingPublicSettings || !authChecked) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-cream">
         <div className="w-8 h-8 border-4 border-sand-dark border-t-teal rounded-full animate-spin"></div>
@@ -54,18 +57,41 @@ const AuthenticatedApp = () => {
     );
   }
 
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      navigateToLogin();
-      return null;
-    }
+  // Auth check complete and user is not authenticated — soft redirect
+  if (!isAuthenticated) {
+    return <Navigate to="/signin" replace />;
+  }
+
+  return children;
+};
+
+const AuthenticatedApp = () => {
+  const { isLoadingAuth, isLoadingPublicSettings, authError, authChecked, navigateRef } = useAuth();
+  const navigate = useNavigate();
+
+  // Register the React Router navigate fn into AuthContext
+  // so navigateToLogin() uses soft navigation instead of window.location.href
+  useEffect(() => {
+    navigateRef.current = navigate;
+  }, [navigate, navigateRef]);
+
+  // Show spinner while session is being established — never redirect during this window
+  if (isLoadingPublicSettings || isLoadingAuth || !authChecked) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-cream">
+        <div className="w-8 h-8 border-4 border-sand-dark border-t-teal rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Only handle non-auth errors here — auth_required is handled per-route by ProtectedRoute
+  if (authError && authError.type === 'user_not_registered') {
+    return <UserNotRegisteredError />;
   }
 
   return (
     <Routes>
-      {/* Public */}
+      {/* Public routes — no auth required */}
       <Route path="/" element={<Home />} />
       <Route path="/associations" element={<AssociationsLanding />} />
       <Route path="/vendors" element={<VendorsLanding />} />
@@ -78,29 +104,29 @@ const AuthenticatedApp = () => {
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
 
-      {/* Signup flows */}
+      {/* Signup flows — auth not required (user is mid-registration) */}
       <Route path="/onboarding" element={<AssociationOnboarding />} />
       <Route path="/portal/vendor/setup" element={<VendorSetup />} />
       <Route path="/resident/signup" element={<ResidentSignup />} />
 
-      {/* Association portal */}
-      <Route path="/portal/association" element={<AssociationDashboard />} />
-      <Route path="/portal/association/vendors" element={<AssociationVendorDirectory />} />
-      <Route path="/portal/association/documents" element={<AssociationDocumentVault />} />
-      <Route path="/portal/association/settings" element={<AssociationSettingsPage />} />
+      {/* Association portal — protected */}
+      <Route path="/portal/association" element={<ProtectedRoute><AssociationDashboard /></ProtectedRoute>} />
+      <Route path="/portal/association/vendors" element={<ProtectedRoute><AssociationVendorDirectory /></ProtectedRoute>} />
+      <Route path="/portal/association/documents" element={<ProtectedRoute><AssociationDocumentVault /></ProtectedRoute>} />
+      <Route path="/portal/association/settings" element={<ProtectedRoute><AssociationSettingsPage /></ProtectedRoute>} />
 
-      {/* Vendor portal */}
-      <Route path="/portal/vendor" element={<VendorDashboard />} />
-      <Route path="/portal/vendor/documents" element={<VendorDocumentsPage />} />
-      <Route path="/portal/vendor/associations" element={<VendorAssociationsPage />} />
-      <Route path="/portal/vendor/profile" element={<VendorProfilePage />} />
-      <Route path="/portal/vendor/settings" element={<VendorSettingsPage />} />
+      {/* Vendor portal — protected */}
+      <Route path="/portal/vendor" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
+      <Route path="/portal/vendor/documents" element={<ProtectedRoute><VendorDocumentsPage /></ProtectedRoute>} />
+      <Route path="/portal/vendor/associations" element={<ProtectedRoute><VendorAssociationsPage /></ProtectedRoute>} />
+      <Route path="/portal/vendor/profile" element={<ProtectedRoute><VendorProfilePage /></ProtectedRoute>} />
+      <Route path="/portal/vendor/settings" element={<ProtectedRoute><VendorSettingsPage /></ProtectedRoute>} />
 
-      {/* Resident portal */}
-      <Route path="/portal/resident/dashboard" element={<ResidentHome />} />
-      <Route path="/portal/resident/vendors" element={<ResidentVendorDirectory />} />
-      <Route path="/portal/resident/profile" element={<ResidentProfilePage />} />
-      <Route path="/portal/resident/notifications" element={<ResidentNotificationsPage />} />
+      {/* Resident portal — protected */}
+      <Route path="/portal/resident/dashboard" element={<ProtectedRoute><ResidentHome /></ProtectedRoute>} />
+      <Route path="/portal/resident/vendors" element={<ProtectedRoute><ResidentVendorDirectory /></ProtectedRoute>} />
+      <Route path="/portal/resident/profile" element={<ProtectedRoute><ResidentProfilePage /></ProtectedRoute>} />
+      <Route path="/portal/resident/notifications" element={<ProtectedRoute><ResidentNotificationsPage /></ProtectedRoute>} />
 
       <Route path="*" element={<PageNotFound />} />
     </Routes>
