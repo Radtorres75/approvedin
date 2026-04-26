@@ -5,11 +5,10 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { invitation_id } = body;
+    // Support both: direct call with { invitation_id } and entity automation payload { event: { entity_id } }
+    const invitation_id = body.invitation_id || body.event?.entity_id || body.data?.id;
 
     if (!invitation_id) {
       return Response.json({ error: "invitation_id is required" }, { status: 400 });
