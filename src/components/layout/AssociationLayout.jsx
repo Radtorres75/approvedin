@@ -35,8 +35,11 @@ export default function AssociationLayout({ children, title }) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       <div className="p-6 border-b border-navy-light">
-        <Link to="/" className="flex items-center">
-          <img src="https://media.base44.com/images/public/69e9180b18cbe750b3daf184/84825af07_604f35b18_approvedin-logo2.png" alt="ApprovedIn" style={{ height: 36 }} className="w-auto object-contain" />
+        <Link to="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-teal flex items-center justify-center">
+            <span className="text-navy font-black text-sm">A</span>
+          </div>
+          <span className="text-white font-bold">ApprovedIn</span>
         </Link>
         <p className="text-white/40 text-xs mt-2 font-medium uppercase tracking-wider">Association Portal</p>
       </div>

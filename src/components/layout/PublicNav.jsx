@@ -56,8 +56,11 @@ export default function PublicNav() {
     <nav className="sticky top-0 z-50 bg-navy border-b border-navy-light">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center">
-            <img src="https://media.base44.com/images/public/69e9180b18cbe750b3daf184/84825af07_604f35b18_approvedin-logo2.png" alt="ApprovedIn" style={{ height: 36 }} className="w-auto object-contain" />
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-teal flex items-center justify-center">
+              <span className="text-navy font-black text-sm">A</span>
+            </div>
+            <span className="text-white font-bold text-lg tracking-tight">ApprovedIn</span>
           </Link>
           <div className="flex items-center gap-3">
             {user && portalUrl ? (
