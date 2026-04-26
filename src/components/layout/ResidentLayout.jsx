@@ -24,11 +24,8 @@ export default function ResidentLayout({ children, title }) {
       <header className="bg-navy sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-teal flex items-center justify-center">
-                <span className="text-navy font-black text-xs">A</span>
-              </div>
-              <span className="text-white font-bold hidden sm:block">ApprovedIn</span>
+            <Link to="/" className="flex items-center">
+              <img src="https://media.base44.com/images/public/69e9180b18cbe750b3daf184/84825af07_604f35b18_approvedin-logo2.png" alt="ApprovedIn" style={{ height: 36 }} className="w-auto object-contain" />
             </Link>
             <nav className="hidden md:flex items-center gap-1">
               {NAV.map(item => {

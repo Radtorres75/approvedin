@@ -7,11 +7,8 @@ export default function PublicFooter() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-teal flex items-center justify-center">
-                <span className="text-navy font-black text-sm">A</span>
-              </div>
-              <span className="text-white font-bold text-lg">ApprovedIn</span>
+            <div className="mb-4">
+              <img src="https://media.base44.com/images/public/69e9180b18cbe750b3daf184/84825af07_604f35b18_approvedin-logo2.png" alt="ApprovedIn" style={{ height: 36 }} className="w-auto object-contain" />
             </div>
             <p className="text-sm leading-relaxed">
               Compliance is the product.<br />Community is the platform.
