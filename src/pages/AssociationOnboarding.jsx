@@ -1,16 +1,13 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { FLORIDA_COUNTIES, ASSOCIATION_TYPES } from "@/lib/constants";
-import { ChevronRight, CheckCircle, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { ChevronRight, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 
-// step 0 = create account, "verify" = OTP, step 1 = association details, step 2 = compliance
 const STEP_LABELS = ["Account", "Association", "Compliance"];
 
 export default function AssociationOnboarding() {
-  const [step, setStep] = useState(0); // 0 = form, "verify" = OTP, 1/2 = wizard
-  const [pendingEmail, setPendingEmail] = useState("");
-  const [pendingPassword, setPendingPassword] = useState("");
+  const [step, setStep] = useState(0);
   const [assocId, setAssocId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -25,16 +22,16 @@ export default function AssociationOnboarding() {
     const msg = err?.message || err?.error || err?.toString() || "";
     const lower = msg.toLowerCase();
     if (lower.includes("already exists") || lower.includes("already registered") || lower.includes("duplicate") || lower.includes("email_exists")) {
-      return { text: "An account with this email already exists. Please log in instead.", showLogin: true };
+      return "An account with this email already exists. Please log in instead.";
     }
     if (lower.includes("password") && (lower.includes("short") || lower.includes("weak") || lower.includes("length"))) {
-      return { text: "Your password must be at least 8 characters." };
+      return "Your password must be at least 8 characters.";
     }
     if (lower.includes("network") || lower.includes("fetch") || lower.includes("connection")) {
-      return { text: "Connection error. Please check your internet and try again." };
+      return "Connection error. Please check your internet and try again.";
     }
-    if (msg && !lower.includes("object object")) return { text: msg };
-    return { text: "Something went wrong. Please try again or contact support@approvedin.com" };
+    if (msg && !lower.includes("object object")) return msg;
+    return "Something went wrong. Please try again or contact support@approvedin.com";
   };
 
   const handleCreateAccount = async (e) => {
@@ -44,38 +41,20 @@ export default function AssociationOnboarding() {
     if (creds.password !== creds.confirm_password) { setError("Passwords do not match."); return; }
     setLoading(true); setError("");
     try {
+      // Register without role — Base44 doesn't allow client-side role assignment
       await base44.auth.register({
         email: creds.email,
         password: creds.password,
         first_name: creds.first_name,
         last_name: creds.last_name,
-        role: "association_manager",
       });
-      // Show OTP verification step
-      setPendingEmail(creds.email);
-      setPendingPassword(creds.password);
-      setStep("verify");
-    } catch (err) {
-      console.error("Account creation error:", err);
-      const parsed = parseError(err);
-      setError(parsed.text);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleVerified = async () => {
-    setLoading(true); setError("");
-    try {
-      await base44.auth.loginViaEmailPassword(pendingEmail, pendingPassword);
+      // Log in immediately — no OTP step
+      await base44.auth.loginViaEmailPassword(creds.email, creds.password);
       await new Promise(r => setTimeout(r, 800));
+
       const user = await base44.auth.me();
       if (!user || !user.id) throw new Error("Could not establish session. Please log in.");
-
-      // Ensure role is set correctly
-      if (user.role !== "association_manager") {
-        await base44.auth.updateMe({ role: "association_manager" });
-      }
 
       const assoc = await base44.entities.Association.create({
         user_id: user.id,
@@ -91,9 +70,8 @@ export default function AssociationOnboarding() {
       setAssocId(assoc.id);
       setStep(1);
     } catch (err) {
-      console.error("handleVerified error:", err);
-      const msg = err?.message || err?.toString() || "";
-      setError(msg && !msg.toLowerCase().includes("object object") ? msg : "Login failed after verification. Please go to the Sign In page and log in manually.");
+      console.error("Account creation error:", err);
+      setError(parseError(err));
     } finally {
       setLoading(false);
     }
@@ -128,7 +106,6 @@ export default function AssociationOnboarding() {
         gl_minimum_coverage: s2.gl_minimum_coverage ? parseFloat(s2.gl_minimum_coverage) : null,
         onboarding_complete: true,
       });
-      await base44.auth.updateMe({ profile_complete: true });
       window.location.href = "/portal/association";
     } catch (err) {
       console.error("handleStep2 error:", err);
@@ -138,8 +115,6 @@ export default function AssociationOnboarding() {
       setLoading(false);
     }
   };
-
-  const displayStep = step === 0 ? null : step; // step 1,2 map to wizard steps 1,2
 
   return (
     <div className="min-h-screen bg-cream flex flex-col">
@@ -180,11 +155,6 @@ export default function AssociationOnboarding() {
                   <Link to="/signin" className="block mt-2 underline font-semibold text-red-700 hover:text-red-900">Log In →</Link>
                 )}
               </div>
-            )}
-
-            {/* VERIFY: OTP step */}
-            {step === "verify" && (
-              <OtpStep email={pendingEmail} onVerified={handleVerified} loading={loading} />
             )}
 
             {/* STEP 0: Create Account */}
@@ -293,82 +263,12 @@ export default function AssociationOnboarding() {
   );
 }
 
-function OtpStep({ email, onVerified, loading }) {
-  const [otp, setOtp] = useState("");
-  const [verifying, setVerifying] = useState(false);
-  const [error, setError] = useState("");
-  const [resending, setResending] = useState(false);
-  const [resent, setResent] = useState(false);
-
-  const handleVerify = async (e) => {
-    e.preventDefault();
-    setVerifying(true); setError("");
-    try {
-      await base44.auth.verifyOtp({ email, otpCode: otp });
-      await onVerified();
-    } catch (err) {
-      const msg = err?.message || err?.toString() || "";
-      setError(msg.toLowerCase().includes("invalid") || msg.toLowerCase().includes("expired")
-        ? "Invalid or expired code. Please try again or request a new one."
-        : "Verification failed. Please try again.");
-      setVerifying(false);
-    }
-  };
-
-  const handleResend = async () => {
-    setResending(true); setResent(false); setError("");
-    try { await base44.auth.resendOtp(email); setResent(true); }
-    catch { setError("Could not resend code. Please try again."); }
-    finally { setResending(false); }
-  };
-
-  return (
-    <div className="space-y-5">
-      <div className="text-center">
-        <div className="w-14 h-14 bg-teal/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <ShieldCheck size={24} className="text-teal-dark" />
-        </div>
-        <h2 className="text-2xl font-black text-navy mb-2">Check your email</h2>
-        <p className="text-body-brown text-sm">We sent a 6-digit code to <strong>{email}</strong>. Enter it below to activate your account.</p>
-      </div>
-      {error && <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg">{error}</div>}
-      {resent && <div className="bg-teal/5 border border-teal/20 text-teal-dark text-sm px-4 py-3 rounded-lg">A new code has been sent.</div>}
-      <form onSubmit={handleVerify} className="space-y-4">
-        <div>
-          <label className="block text-navy font-medium text-sm mb-1.5">Verification code</label>
-          <input type="text" inputMode="numeric" maxLength={6} value={otp}
-            onChange={e => setOtp(e.target.value.replace(/\D/g, ""))} required autoFocus
-            placeholder="123456"
-            className="w-full border border-sand-dark rounded-lg px-4 py-3 text-navy text-xl text-center tracking-widest font-bold focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal bg-white" />
-        </div>
-        <button type="submit" disabled={verifying || loading || otp.length < 6}
-          className="w-full bg-navy hover:bg-navy-mid text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-60">
-          {verifying || loading ? "Verifying..." : "Verify & Continue"}
-        </button>
-      </form>
-      <div className="text-center">
-        <p className="text-body-brown text-sm">Didn't receive the email?</p>
-        <button onClick={handleResend} disabled={resending}
-          className="text-teal-dark text-sm font-semibold hover:underline mt-1 disabled:opacity-60">
-          {resending ? "Sending..." : "Resend code"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function Field({ label, value, onChange, type = "text", required, placeholder }) {
   return (
     <div>
       <label className="block text-navy font-medium text-sm mb-1.5">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        required={required}
-        placeholder={placeholder}
-        className="w-full border border-sand-dark rounded-lg px-4 py-3 text-navy text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal bg-white"
-      />
+      <input type={type} value={value} onChange={e => onChange(e.target.value)} required={required} placeholder={placeholder}
+        className="w-full border border-sand-dark rounded-lg px-4 py-3 text-navy text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal bg-white" />
     </div>
   );
 }
@@ -377,12 +277,8 @@ function SelectField({ label, value, onChange, options, required }) {
   return (
     <div>
       <label className="block text-navy font-medium text-sm mb-1.5">{label}</label>
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        required={required}
-        className="w-full border border-sand-dark rounded-lg px-4 py-3 text-navy text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal bg-white"
-      >
+      <select value={value} onChange={e => onChange(e.target.value)} required={required}
+        className="w-full border border-sand-dark rounded-lg px-4 py-3 text-navy text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal bg-white">
         <option value="">Select...</option>
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -392,7 +288,8 @@ function SelectField({ label, value, onChange, options, required }) {
 
 function SubmitBtn({ loading, label }) {
   return (
-    <button type="submit" disabled={loading} className="w-full bg-navy hover:bg-navy-mid text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2 mt-2">
+    <button type="submit" disabled={loading}
+      className="w-full bg-navy hover:bg-navy-mid text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2 mt-2">
       {loading ? "Saving..." : <>{label} <ChevronRight size={16} /></>}
     </button>
   );
