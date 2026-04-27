@@ -23,7 +23,7 @@ export default function Home() {
           <p className="text-white/70 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
             The only compliance-led vendor marketplace built around your community's rules. Every vendor has been reviewed and approved by the association. Their COI, contractor license, and credentials are on file.
           </p>
-          <p className="text-white/50 text-sm mb-4">Who are you?</p>
+          <p className="text-white/50 text-sm mb-4 hidden">Who are you?</p>
         </div>
       </section>
 
