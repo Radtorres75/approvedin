@@ -2,24 +2,21 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { FLORIDA_COUNTIES, TRADE_CATEGORIES } from "@/lib/constants";
-import { ChevronRight, CheckCircle, Upload, X, ShieldCheck } from "lucide-react";
+import { ChevronRight, CheckCircle, Upload, X } from "lucide-react";
 
 const STEP_LABELS = ["Credentials", "Business Info", "Categories", "Logo", "COI", "Trade License", "Workers Comp", "Sunbiz", "Review"];
 const TOTAL_STEPS = 8;
 
 export default function VendorSetup() {
-  const [step, setStep] = useState(0); // 0 = credentials
+  const [step, setStep] = useState(0);
   const [vendorId, setVendorId] = useState(null);
   const [vendor, setVendor] = useState(null);
   const [loading, setLoading] = useState(false);
   const [initLoading, setInitLoading] = useState(true);
   const [error, setError] = useState("");
 
-
   const navigate = useNavigate();
 
-  const [pendingEmail, setPendingEmail] = useState("");
-  const [pendingPassword, setPendingPassword] = useState("");
   const [creds, setCreds] = useState({ email: "", password: "", confirm_password: "", tos: false });
   const [s1, setS1] = useState({ business_name: "", business_description: "", business_phone: "", business_email: "", business_website: "", years_in_business: "" });
   const [s2, setS2] = useState({ trade_categories: [], florida_counties_served: [] });
@@ -61,7 +58,6 @@ export default function VendorSetup() {
       setup_current_step: stepNum,
       setup_highest_completed_step: Math.max(vendor?.setup_highest_completed_step || 0, stepNum),
     });
-    // trigger profile recalculation
     await base44.functions.invoke("recalculateProfileCompletion", { vendor_id: vendorId });
   };
 
@@ -89,36 +85,27 @@ export default function VendorSetup() {
     if (!creds.tos) { setError("Please accept the Terms of Service."); return; }
     setLoading(true); setError("");
     try {
-      await base44.auth.register({ email: creds.email, password: creds.password, role: "vendor" });
-      setPendingEmail(creds.email);
-      setPendingPassword(creds.password);
-      setStep("verify");
-    } catch (err) {
-      console.error("Vendor account creation error:", err);
-      setError(parseError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
+      // Register without role — Base44 doesn't allow client-side role assignment
+      await base44.auth.register({ email: creds.email, password: creds.password });
 
-  const handleVerified = async () => {
-    setLoading(true); setError("");
-    try {
-      await base44.auth.loginViaEmailPassword(pendingEmail, pendingPassword);
+      // Log in immediately — no OTP step
+      await base44.auth.loginViaEmailPassword(creds.email, creds.password);
       await new Promise(r => setTimeout(r, 800));
-      const user = await base44.auth.me();
-      if (!user || !user.id) throw new Error("Could not establish session.");
-      const today = new Date().toISOString().split("T")[0];
-      // Ensure role is set correctly
-      if (user.role !== "vendor") {
-        await base44.auth.updateMe({ role: "vendor" });
-      }
 
+      const user = await base44.auth.me();
+      if (!user || !user.id) throw new Error("Could not establish session. Please try logging in.");
+
+      const today = new Date().toISOString().split("T")[0];
       const v = await base44.entities.Vendor.create({
-        user_id: user.id, business_name: "", subscription_tier: "beta",
-        beta_signup_date: today, setup_current_step: 1,
-        setup_highest_completed_step: 0, profile_completion_percentage: 0,
-        overall_compliance_status: "noncompliant", is_suspended: false,
+        user_id: user.id,
+        business_name: "",
+        subscription_tier: "beta",
+        beta_signup_date: today,
+        setup_current_step: 1,
+        setup_highest_completed_step: 0,
+        profile_completion_percentage: 0,
+        overall_compliance_status: "noncompliant",
+        is_suspended: false,
       });
       if (!v || !v.id) throw new Error("Account created but vendor profile could not be initialized. Please log in to continue.");
       setVendorId(v.id);
@@ -126,8 +113,8 @@ export default function VendorSetup() {
       setInitLoading(false);
       setStep(1);
     } catch (err) {
-      const msg = err?.message || err?.toString() || "";
-      setError(msg && !msg.toLowerCase().includes("object object") ? msg : "Verification succeeded but login failed. Please try logging in.");
+      console.error("Vendor account creation error:", err);
+      setError(parseError(err));
     } finally {
       setLoading(false);
     }
@@ -178,7 +165,7 @@ export default function VendorSetup() {
     setLoading(true); setError("");
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file: coiData.file });
-      const docData = {
+      await base44.entities.ComplianceDocument.create({
         vendor_id: vendorId,
         document_type: "coi",
         file_url,
@@ -198,8 +185,7 @@ export default function VendorSetup() {
         professional_do_not_carry: coiData.professional_option === "do_not_carry",
         professional_hold_harmless: coiData.professional_option === "hold_harmless",
         professional_expiration_date: coiData.professional_option === "date" ? coiData.professional_expiration_date : null,
-      };
-      await base44.entities.ComplianceDocument.create(docData);
+      });
       await saveStep(4);
       setStep(5);
     } catch { setError("Failed to upload."); } finally { setLoading(false); }
@@ -292,7 +278,11 @@ export default function VendorSetup() {
 
   const toggleMulti = (arr, val) => arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val];
 
-  if (initLoading) return <div className="min-h-screen bg-cream flex items-center justify-center"><div className="w-8 h-8 border-4 border-sand-dark border-t-teal rounded-full animate-spin" /></div>;
+  if (initLoading) return (
+    <div className="min-h-screen bg-cream flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-sand-dark border-t-teal rounded-full animate-spin" />
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-cream flex flex-col">
@@ -322,7 +312,6 @@ export default function VendorSetup() {
           )}
 
           <div className="bg-white rounded-2xl shadow-sm border border-sand-dark p-8">
-            <>
             {error && (
               <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
                 {error}
@@ -330,11 +319,6 @@ export default function VendorSetup() {
                   <a href="/signin" className="block mt-2 underline font-semibold text-red-700 hover:text-red-900">Log In →</a>
                 )}
               </div>
-            )}
-
-            {/* Step verify: OTP */}
-            {step === "verify" && (
-              <OtpStep email={pendingEmail} onVerified={handleVerified} loading={loading} />
             )}
 
             {/* Step 0: Credentials */}
@@ -365,7 +349,9 @@ export default function VendorSetup() {
                 <Field label="Business name *" value={s1.business_name} onChange={v => setS1({...s1, business_name: v})} required />
                 <div>
                   <label className="block text-navy font-medium text-sm mb-1.5">Business description *</label>
-                  <textarea value={s1.business_description} onChange={e => setS1({...s1, business_description: e.target.value})} required className="w-full border border-sand-dark rounded-lg px-4 py-3 text-navy text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 resize-none h-20" placeholder="Describe your services..." />
+                  <textarea value={s1.business_description} onChange={e => setS1({...s1, business_description: e.target.value})} required
+                    className="w-full border border-sand-dark rounded-lg px-4 py-3 text-navy text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 resize-none h-20"
+                    placeholder="Describe your services..." />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <Field label="Business phone *" value={s1.business_phone} onChange={v => setS1({...s1, business_phone: v})} required />
@@ -508,7 +494,8 @@ export default function VendorSetup() {
                 </div>
                 <div>
                   <label className="block text-navy font-medium text-sm mb-1.5">Annual expiration date (read-only)</label>
-                  <input type="text" value={`May 1, ${new Date().getFullYear()}`} readOnly className="w-full border border-sand-dark rounded-lg px-4 py-3 text-body-brown text-sm bg-sand cursor-not-allowed" />
+                  <input type="text" value={`May 1, ${new Date().getFullYear()}`} readOnly
+                    className="w-full border border-sand-dark rounded-lg px-4 py-3 text-body-brown text-sm bg-sand cursor-not-allowed" />
                 </div>
                 <FileUpload label="Upload Sunbiz document *" file={sunbizData.file} onFile={f => setSunbizData({...sunbizData, file: f})} />
                 <SubmitBtn loading={loading} label="Continue" />
@@ -524,85 +511,21 @@ export default function VendorSetup() {
                   <p className="text-navy text-sm">Your vendor profile has been created. You can now apply to Florida associations and start getting approved.</p>
                 </div>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between py-2 border-b border-sand"><span className="text-body-brown">Business info</span><span className="text-teal-dark font-medium flex items-center gap-1"><CheckCircle size={14} /> Saved</span></div>
-                  <div className="flex justify-between py-2 border-b border-sand"><span className="text-body-brown">Categories & counties</span><span className="text-teal-dark font-medium flex items-center gap-1"><CheckCircle size={14} /> Saved</span></div>
-                  <div className="flex justify-between py-2 border-b border-sand"><span className="text-body-brown">COI document</span><span className="text-teal-dark font-medium flex items-center gap-1"><CheckCircle size={14} /> Uploaded</span></div>
-                  <div className="flex justify-between py-2 border-b border-sand"><span className="text-body-brown">Trade license</span><span className="text-teal-dark font-medium flex items-center gap-1"><CheckCircle size={14} /> Uploaded</span></div>
-                  <div className="flex justify-between py-2 border-b border-sand"><span className="text-body-brown">Workers compensation</span><span className="text-teal-dark font-medium flex items-center gap-1"><CheckCircle size={14} /> Saved</span></div>
-                  <div className="flex justify-between py-2"><span className="text-body-brown">Florida Sunbiz</span><span className="text-teal-dark font-medium flex items-center gap-1"><CheckCircle size={14} /> Uploaded</span></div>
+                  {["Business info", "Categories & counties", "COI document", "Trade license", "Workers compensation", "Florida Sunbiz"].map((item, i) => (
+                    <div key={i} className={`flex justify-between py-2 ${i < 5 ? "border-b border-sand" : ""}`}>
+                      <span className="text-body-brown">{item}</span>
+                      <span className="text-teal-dark font-medium flex items-center gap-1"><CheckCircle size={14} /> Saved</span>
+                    </div>
+                  ))}
                 </div>
-                <button onClick={handleComplete} disabled={loading} className="w-full bg-teal hover:bg-teal-dark text-navy font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-60">
+                <button onClick={handleComplete} disabled={loading}
+                  className="w-full bg-teal hover:bg-teal-dark text-navy font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-60">
                   {loading ? "Finalizing..." : "Go to My Dashboard →"}
                 </button>
               </div>
             )}
-            </>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function OtpStep({ email, onVerified, loading }) {
-  const [otp, setOtp] = useState("");
-  const [verifying, setVerifying] = useState(false);
-  const [error, setError] = useState("");
-  const [resending, setResending] = useState(false);
-  const [resent, setResent] = useState(false);
-
-  const handleVerify = async (e) => {
-    e.preventDefault();
-    setVerifying(true); setError("");
-    try {
-      await base44.auth.verifyOtp({ email, otpCode: otp });
-      await onVerified();
-    } catch (err) {
-      const msg = err?.message || err?.toString() || "";
-      setError(msg.toLowerCase().includes("invalid") || msg.toLowerCase().includes("expired")
-        ? "Invalid or expired code. Please try again or request a new one."
-        : "Verification failed. Please try again.");
-      setVerifying(false);
-    }
-  };
-
-  const handleResend = async () => {
-    setResending(true); setResent(false); setError("");
-    try { await base44.auth.resendOtp(email); setResent(true); }
-    catch { setError("Could not resend code. Please try again."); }
-    finally { setResending(false); }
-  };
-
-  return (
-    <div className="space-y-5">
-      <div className="text-center">
-        <div className="w-14 h-14 bg-teal/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <ShieldCheck size={24} className="text-teal-dark" />
-        </div>
-        <h2 className="text-2xl font-black text-navy mb-2">Check your email</h2>
-        <p className="text-body-brown text-sm">We sent a 6-digit code to <strong>{email}</strong>. Enter it below to activate your account.</p>
-      </div>
-      {error && <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg">{error}</div>}
-      {resent && <div className="bg-teal/5 border border-teal/20 text-teal-dark text-sm px-4 py-3 rounded-lg">A new code has been sent.</div>}
-      <form onSubmit={handleVerify} className="space-y-4">
-        <div>
-          <label className="block text-navy font-medium text-sm mb-1.5">Verification code</label>
-          <input type="text" inputMode="numeric" maxLength={6} value={otp}
-            onChange={e => setOtp(e.target.value.replace(/\D/g, ""))} required autoFocus
-            placeholder="123456"
-            className="w-full border border-sand-dark rounded-lg px-4 py-3 text-navy text-xl text-center tracking-widest font-bold focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal bg-white" />
-        </div>
-        <button type="submit" disabled={verifying || loading || otp.length < 6}
-          className="w-full bg-navy hover:bg-navy-mid text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-60">
-          {verifying || loading ? "Verifying..." : "Verify & Continue"}
-        </button>
-      </form>
-      <div className="text-center">
-        <p className="text-body-brown text-sm">Didn't receive the email?</p>
-        <button onClick={handleResend} disabled={resending}
-          className="text-teal-dark text-sm font-semibold hover:underline mt-1 disabled:opacity-60">
-          {resending ? "Sending..." : "Resend code"}
-        </button>
       </div>
     </div>
   );
@@ -642,7 +565,8 @@ function FileUpload({ label, file, onFile, accept = "*" }) {
 
 function SubmitBtn({ loading, label, flex1 }) {
   return (
-    <button type="submit" disabled={loading} className={`${flex1 ? "flex-1" : "w-full"} bg-navy hover:bg-navy-mid text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2`}>
+    <button type="submit" disabled={loading}
+      className={`${flex1 ? "flex-1" : "w-full"} bg-navy hover:bg-navy-mid text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2`}>
       {loading ? "Saving..." : <>{label} <ChevronRight size={16} /></>}
     </button>
   );
