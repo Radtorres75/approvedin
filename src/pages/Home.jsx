@@ -23,7 +23,7 @@ export default function Home() {
           <p className="text-white/70 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
             The only compliance-led vendor marketplace built around your community's rules. Every vendor has been reviewed and approved by the association. Their COI, contractor license, and credentials are on file.
           </p>
-          <p className="text-white/50 text-sm mb-4 hidden">Who are you?</p>
+          
         </div>
       </section>
 
@@ -113,10 +113,10 @@ export default function Home() {
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-3 gap-3 rounded-2xl overflow-hidden">
             <img src="https://media.base44.com/images/public/69e9180b18cbe750b3daf184/c8ad32d8d_generated_image.png" alt="Florida condo" className="mx-40 col-span-2 h-64 w-full object-cover" />
-            <div className="flex flex-col gap-3 hidden">
-              <img src="https://media.base44.com/images/public/69e9180b18cbe750b3daf184/ffabde2a5_generated_image.png" alt="HOA community" className="h-[calc(50%-6px)] w-full object-cover hidden" />
-              <img src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=400&q=80" alt="Community" className="h-[calc(50%-6px)] w-full object-cover hidden" />
-            </div>
+            
+
+
+            
           </div>
           <div className="text-center mt-10">
             <h2 className="text-3xl font-black text-navy mb-3">Serving all Florida community types</h2>
