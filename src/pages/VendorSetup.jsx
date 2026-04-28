@@ -3,12 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { FLORIDA_COUNTIES, TRADE_CATEGORIES } from "@/lib/constants";
 import { ChevronRight, CheckCircle, Upload, X } from "lucide-react";
+import OtpVerification from "@/components/auth/OtpVerification";
 
 const STEP_LABELS = ["Credentials", "Business Info", "Categories", "Logo", "COI", "Trade License", "Workers Comp", "Sunbiz", "Review"];
 const TOTAL_STEPS = 8;
 
 export default function VendorSetup() {
   const [step, setStep] = useState(0);
+  const [showOtp, setShowOtp] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
   const [vendorId, setVendorId] = useState(null);
   const [vendor, setVendor] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -111,7 +114,8 @@ export default function VendorSetup() {
       setVendorId(v.id);
       setVendor(v);
       setInitLoading(false);
-      setStep(1);
+      setRegisteredEmail(creds.email);
+      setShowOtp(true);
     } catch (err) {
       console.error("Vendor account creation error:", err);
       setError(parseError(err));
@@ -312,7 +316,13 @@ export default function VendorSetup() {
           )}
 
           <div className="bg-white rounded-2xl shadow-sm border border-sand-dark p-8">
-            {error && (
+            {showOtp && (
+              <OtpVerification
+                email={registeredEmail}
+                onVerified={() => { setShowOtp(false); setStep(1); }}
+              />
+            )}
+            {!showOtp && error && (
               <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
                 {error}
                 {(error.includes("already exists") || error.includes("log in")) && (
@@ -322,7 +332,7 @@ export default function VendorSetup() {
             )}
 
             {/* Step 0: Credentials */}
-            {step === 0 && (
+            {!showOtp && step === 0 && (
               <form onSubmit={handleCreds} className="space-y-4">
                 <div className="mb-6">
                   <h2 className="text-2xl font-black text-navy mb-1">Create your vendor account</h2>
@@ -343,7 +353,7 @@ export default function VendorSetup() {
             )}
 
             {/* Step 1: Business Info */}
-            {step === 1 && (
+            {!showOtp && step === 1 && (
               <form onSubmit={handleStep1} className="space-y-4">
                 <h2 className="text-xl font-black text-navy mb-4">Business information</h2>
                 <Field label="Business name *" value={s1.business_name} onChange={v => setS1({...s1, business_name: v})} required />
@@ -364,7 +374,7 @@ export default function VendorSetup() {
             )}
 
             {/* Step 2: Categories & Counties */}
-            {step === 2 && (
+            {!showOtp && step === 2 && (
               <form onSubmit={handleStep2} className="space-y-5">
                 <h2 className="text-xl font-black text-navy mb-4">Trade categories & coverage</h2>
                 <div>
@@ -396,7 +406,7 @@ export default function VendorSetup() {
             )}
 
             {/* Step 3: Logo */}
-            {step === 3 && (
+            {!showOtp && step === 3 && (
               <form onSubmit={handleStep3} className="space-y-5">
                 <h2 className="text-xl font-black text-navy mb-1">Business logo</h2>
                 <p className="text-body-brown text-sm mb-4">Optional — add a logo to make your profile stand out.</p>
@@ -409,7 +419,7 @@ export default function VendorSetup() {
             )}
 
             {/* Step 4: COI */}
-            {step === 4 && (
+            {!showOtp && step === 4 && (
               <form onSubmit={handleStep4} className="space-y-5">
                 <h2 className="text-xl font-black text-navy mb-1">Certificate of Insurance (COI)</h2>
                 <FileUpload label="Upload COI document *" file={coiData.file} onFile={f => setCoiData({...coiData, file: f})} />
@@ -445,7 +455,7 @@ export default function VendorSetup() {
             )}
 
             {/* Step 5: Trade License */}
-            {step === 5 && (
+            {!showOtp && step === 5 && (
               <form onSubmit={handleStep5} className="space-y-4">
                 <h2 className="text-xl font-black text-navy mb-4">Trade License</h2>
                 <Field label="License number *" value={tlData.license_number} onChange={v => setTlData({...tlData, license_number: v})} required />
@@ -457,7 +467,7 @@ export default function VendorSetup() {
             )}
 
             {/* Step 6: Workers Comp */}
-            {step === 6 && (
+            {!showOtp && step === 6 && (
               <form onSubmit={handleStep6} className="space-y-4">
                 <h2 className="text-xl font-black text-navy mb-1">Workers Compensation</h2>
                 <div className="grid grid-cols-1 gap-3">
@@ -486,7 +496,7 @@ export default function VendorSetup() {
             )}
 
             {/* Step 7: Sunbiz */}
-            {step === 7 && (
+            {!showOtp && step === 7 && (
               <form onSubmit={handleStep7} className="space-y-4">
                 <h2 className="text-xl font-black text-navy mb-1">Florida Sunbiz Corporate Standing</h2>
                 <div className="bg-teal/5 border border-teal/20 rounded-xl p-3 text-sm text-teal-dark font-medium">
@@ -503,7 +513,7 @@ export default function VendorSetup() {
             )}
 
             {/* Step 8: Review */}
-            {step === 8 && (
+            {!showOtp && step === 8 && (
               <div className="space-y-4">
                 <h2 className="text-xl font-black text-navy mb-4">Review & complete</h2>
                 <div className="bg-teal/5 border border-teal/20 rounded-xl p-4">

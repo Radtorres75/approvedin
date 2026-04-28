@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { CheckCircle, ChevronRight, Search, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
+import OtpVerification from "@/components/auth/OtpVerification";
 
 const inputCls = (err) => `w-full border ${err ? "border-red-400" : "border-sand-dark"} rounded-lg px-4 py-3 text-navy text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 bg-white`;
 const FormField = ({ label, error, children }) => (
@@ -16,6 +17,8 @@ const STEPS = ["Find Community", "Your Unit", "Create Account"];
 
 export default function ResidentSignup() {
   const [step, setStep] = useState(1);
+  const [showOtp, setShowOtp] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -147,7 +150,8 @@ export default function ResidentSignup() {
 
       if (!resident || !resident.id) throw new Error("Account created but profile could not be saved. Please log in to continue.");
 
-      setStep("confirmed");
+      setRegisteredEmail(s2.email);
+      setShowOtp(true);
     } catch (err) {
       console.error("Resident signup error:", err);
       setError(parseError(err));
@@ -188,9 +192,16 @@ export default function ResidentSignup() {
           )}
 
           <div className="bg-white rounded-2xl shadow-sm border border-sand-dark p-8">
-            {error && (
+            {showOtp && (
+              <OtpVerification
+                email={registeredEmail}
+                onVerified={() => { setShowOtp(false); window.location.href = "/portal/resident/dashboard"; }}
+              />
+            )}
+            {!showOtp && error && (
               <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
                 {error}
+
                 {(error.includes("already exists") || error.includes("log in")) && (
                   <a href="/signin" className="block mt-2 underline font-semibold text-red-700 hover:text-red-900">Log In →</a>
                 )}
@@ -198,7 +209,7 @@ export default function ResidentSignup() {
             )}
 
             {/* STEP 1: Find Community */}
-            {step === 1 && (
+            {!showOtp && step === 1 && (
               <div className="space-y-4">
                 <div className="mb-4">
                   <h2 className="text-2xl font-black text-navy mb-1">Find your community</h2>
@@ -231,7 +242,7 @@ export default function ResidentSignup() {
             )}
 
             {/* STEP 2: Your Unit */}
-            {step === 2 && (
+            {!showOtp && step === 2 && (
               <div className="space-y-4">
                 <div className="mb-2">
                   <h2 className="text-2xl font-black text-navy mb-1">Your unit</h2>
@@ -309,7 +320,7 @@ export default function ResidentSignup() {
             )}
 
             {/* STEP 3: Create Account */}
-            {step === 3 && (
+            {!showOtp && step === 3 && (
               <form onSubmit={handleCreateAccount} className="space-y-4">
                 <h2 className="text-2xl font-black text-navy mb-4">Create your account</h2>
 
@@ -363,7 +374,7 @@ export default function ResidentSignup() {
             )}
 
             {/* CONFIRMED */}
-            {step === "confirmed" && (
+            {!showOtp && step === "confirmed" && (
               <div className="text-center py-6 space-y-4">
                 <div className="w-16 h-16 bg-teal/10 rounded-full flex items-center justify-center mx-auto">
                   <CheckCircle size={32} className="text-teal-dark" />

@@ -3,11 +3,14 @@ import { base44 } from "@/api/base44Client";
 import { FLORIDA_COUNTIES, ASSOCIATION_TYPES } from "@/lib/constants";
 import { ChevronRight, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
+import OtpVerification from "@/components/auth/OtpVerification";
 
 const STEP_LABELS = ["Account", "Association", "Compliance"];
 
 export default function AssociationOnboarding() {
   const [step, setStep] = useState(0);
+  const [showOtp, setShowOtp] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
   const [assocId, setAssocId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -68,7 +71,8 @@ export default function AssociationOnboarding() {
       });
       if (!assoc || !assoc.id) throw new Error("Account created but association profile could not be saved. Please log in to continue.");
       setAssocId(assoc.id);
-      setStep(1);
+      setRegisteredEmail(creds.email);
+      setShowOtp(true);
     } catch (err) {
       console.error("Account creation error:", err);
       setError(parseError(err));
@@ -148,7 +152,13 @@ export default function AssociationOnboarding() {
           )}
 
           <div className="bg-white rounded-2xl shadow-sm border border-sand-dark p-8">
-            {error && (
+            {showOtp && (
+              <OtpVerification
+                email={registeredEmail}
+                onVerified={() => { setShowOtp(false); setStep(1); }}
+              />
+            )}
+            {!showOtp && error && (
               <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
                 {error}
                 {(error.includes("already exists") || error.includes("log in")) && (
@@ -158,7 +168,7 @@ export default function AssociationOnboarding() {
             )}
 
             {/* STEP 0: Create Account */}
-            {step === 0 && (
+            {!showOtp && step === 0 && (
               <form onSubmit={handleCreateAccount} className="space-y-4">
                 <div className="mb-6">
                   <h2 className="text-2xl font-black text-navy mb-1">Create your account</h2>
@@ -193,7 +203,7 @@ export default function AssociationOnboarding() {
             )}
 
             {/* STEP 1: Association Details */}
-            {step === 1 && (
+            {!showOtp && step === 1 && (
               <form onSubmit={handleStep1} className="space-y-4">
                 <div className="mb-6">
                   <h2 className="text-2xl font-black text-navy mb-1">Your association</h2>
@@ -217,7 +227,7 @@ export default function AssociationOnboarding() {
             )}
 
             {/* STEP 2: Compliance */}
-            {step === 2 && (
+            {!showOtp && step === 2 && (
               <form onSubmit={handleStep2} className="space-y-5">
                 <div className="mb-6">
                   <h2 className="text-2xl font-black text-navy mb-1">Compliance requirements</h2>

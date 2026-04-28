@@ -20,7 +20,7 @@ export default function OtpVerification({ email, onVerified }) {
       console.error("OTP error:", err);
       const msg = err?.message || err?.toString() || "";
       if (msg.toLowerCase().includes("invalid") || msg.toLowerCase().includes("expired")) {
-        setError("Invalid or expired code. Please try again or request a new one.");
+        setError("That code is incorrect or has expired. Please try again or click Resend.");
       } else if (msg) {
         setError(msg);
       } else {
@@ -51,10 +51,10 @@ export default function OtpVerification({ email, onVerified }) {
         <div className="w-14 h-14 bg-teal/10 rounded-full flex items-center justify-center mx-auto mb-4">
           <ShieldCheck size={24} className="text-teal-dark" />
         </div>
-        <h2 className="text-2xl font-black text-navy mb-2">Verify your email</h2>
+        <h2 className="text-2xl font-black text-navy mb-2">Check your email</h2>
         <p className="text-body-brown text-sm">
-          We sent a 6-digit code to <strong>{email}</strong>.<br />
-          Enter it below to activate your account.
+          We sent a verification code to <strong>{email}</strong>.<br />
+          Enter it below to continue.
         </p>
       </div>
 
@@ -65,7 +65,7 @@ export default function OtpVerification({ email, onVerified }) {
       )}
       {resent && (
         <div className="bg-teal/5 border border-teal/20 text-teal-dark text-sm px-4 py-3 rounded-lg">
-          A new code has been sent to {email}.
+          A new code has been sent to your email.
         </div>
       )}
 
