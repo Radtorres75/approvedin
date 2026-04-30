@@ -20,7 +20,7 @@ export default function Home() {
             Compliance is the product.<br />
             <span className="text-teal">Community</span> is the platform.
           </h1>
-          <p className="text-[hsl(var(--card))] mb-10 mx-auto text-lg leading-relaxed sm:text-xl max-w-2xl">ApprovedIn automatically tracks vendor COIs, trade licenses, and corporate filings for Florida community associations — so you never have to chase paperwork again.
+          <p className="text-[hsl(var(--card))] mb-10 mx-auto text-lg leading-relaxed sm:text-xl max-w-2xl">EapprovedIn automatically tracks vendor COIs, trade licenses, and corporate filings for Florida community associations — so you never have to chase paperwork again.
 
           </p>
           
