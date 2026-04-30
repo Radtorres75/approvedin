@@ -16,8 +16,8 @@ export default function Home() {
             <Shield size={14} />
             Built exclusively for Florida community associations
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-6">Stop chasing vendor certificates.
-Vendors submit. You approve. Done.
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-6">Stop chasing certificates. Vendors submit. You approve. Done.
+
 
           </h1>
           <p className="text-[hsl(var(--card))] mb-10 mx-auto text-lg leading-relaxed sm:text-xl max-w-2xl">Approvedin automatically tracks vendor COIs, trade licenses, and corporate filings for Florida community associations — so you never have to chase paperwork again
