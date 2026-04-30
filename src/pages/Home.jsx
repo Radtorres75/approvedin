@@ -16,7 +16,7 @@ export default function Home() {
             <Shield size={14} />
             Built exclusively for Florida community associations
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-6">Stop chasing certificates. Vendors submit. You approve. Done.
+          <h1 className="text-[hsl(var(--card))] mb-6 text-4xl font-black leading-tight sm:text-5xl md:text-6xl">Stop chasing certificates. Vendors submit. You approve. Done.
 
 
           </h1>
