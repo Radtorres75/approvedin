@@ -14,7 +14,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-teal/10 text-[#ffffff] mb-6 px-4 py-1.5 text-sm font-medium rounded-full inline-flex items-center gap-2 border border-teal/20">
             <Shield size={14} />
-            Built exclusively for Florida community associations
+            Free for Florida community associations
           </div>
           <h1 className="text-[hsl(var(--card))] mb-6 text-4xl font-black leading-tight sm:text-5xl md:text-6xl">Stop chasing certificates. Vendors submit. You approve. Done.
 
