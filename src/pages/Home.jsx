@@ -12,7 +12,7 @@ export default function Home() {
       {/* Hero */}
       <section className="bg-navy text-white py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-teal/10 text-[#ffffff] mb-6 px-4 py-1.5 text-sm font-medium rounded-full inline-flex items-center gap-2 border border-teal/20">
+          <div className="bg-teal/10 text-[hsl(var(--accent))] mb-6 px-4 py-1.5 text-sm font-medium rounded-full inline-flex items-center gap-2 border border-teal/20">
             <Shield size={14} />
             Free for Florida community associations
           </div>
