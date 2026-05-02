@@ -71,7 +71,7 @@ export default function Home() {
                 <div className="relative h-44 overflow-hidden">
                   <img src={card.image} alt={card.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <span className="bg-teal/10 text-[hsl(var(--card))] px-2.5 py-1 text-xs font-semibold rounded-full absolute top-3 right-3">
-                    {card.badge}
+                    Join Free
                   </span>
                 </div>
                 <div className="p-6">
