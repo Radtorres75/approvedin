@@ -11,11 +11,11 @@ export default function PublicFooter() {
               <img
                 src="https://media.base44.com/images/public/69e9180b18cbe750b3daf184/9a7ce84a1_approvedin-logo-nav-transparent.png"
                 alt="ApprovedIn"
-                style={{ height: "28px", width: "auto", objectFit: "contain", display: "block" }}
-              />
+                style={{ height: "28px", width: "auto", objectFit: "contain", display: "block" }} />
+              
             </div>
-            <p className="text-sm leading-relaxed">
-              Compliance is the product.<br />Community is the platform.
+            <p className="text-sm leading-relaxed">Stop chasing vendor certificates. Start managing communities.
+
             </p>
           </div>
           <div>
