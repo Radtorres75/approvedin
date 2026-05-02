@@ -76,7 +76,7 @@ export default function Pricing() {
               <div className="text-3xl mb-2">🏛️</div>
               <h3 className="text-navy font-black text-xl mb-2">Associations</h3>
               <div className="text-4xl font-black text-teal mb-2">$0</div>
-              <p className="text-body-brown text-sm mb-6">Always free — no exceptions</p>
+              <p className="text-body-brown text-sm mb-6">Free — no exceptions</p>
               <ul className="space-y-2 text-sm text-left mb-6">
                 {["All features","Unlimited vendors","Compliance tracking","Expiration alerts","No credit card ever"].map(f => (
                   <li key={f} className="flex items-center gap-2 text-navy"><span className="text-teal">✓</span> {f}</li>
@@ -101,7 +101,7 @@ export default function Pricing() {
               <div className="text-3xl mb-2">🏠</div>
               <h3 className="text-navy font-black text-xl mb-2">Residents</h3>
               <div className="text-4xl font-black text-teal mb-2">$0</div>
-              <p className="text-body-brown text-sm mb-6">Always free — no exceptions</p>
+              <p className="text-body-brown text-sm mb-6">Free — no exceptions</p>
               <ul className="space-y-2 text-sm text-left mb-6">
                 {["Browse approved vendors","Contact information","Compliance status","Full vendor profiles","Association directory"].map(f => (
                   <li key={f} className="flex items-center gap-2 text-navy"><span className="text-teal">✓</span> {f}</li>

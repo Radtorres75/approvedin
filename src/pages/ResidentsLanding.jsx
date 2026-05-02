@@ -25,7 +25,7 @@ export default function ResidentsLanding() {
           <Link to="/resident/signup" className="inline-flex items-center gap-2 bg-teal hover:bg-teal-dark text-navy font-bold text-base px-8 py-4 rounded-xl transition-colors">
             Sign Up — It's Free <ArrowRight size={18} />
           </Link>
-          <p className="text-white/40 text-sm mt-4">No credit card. Always free for residents.</p>
+          <p className="text-white/40 text-sm mt-4">No credit card. Free for residents.</p>
         </div>
       </section>
 

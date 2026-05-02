@@ -21,7 +21,7 @@ export default function About() {
           <div>
             <h2 className="text-2xl font-black text-navy mb-4">How It Started</h2>
             <div className="prose prose-sm max-w-none text-body-brown leading-relaxed space-y-4">
-              <p>Florida's community associations have always faced a uniquely difficult challenge: managing vendor compliance in a market where the stakes are high, the liability is real, and the tools are woefully inadequate. Association managers were tracking COI expiration dates in spreadsheets. Residents were calling contractors found on flyers, with no way to know if they were insured. And associations were discovering too late — after damage was done — that an approved vendor had let their insurance lapse months ago.</p>
+              <p>Florida's community associations have long faced a uniquely difficult challenge: managing vendor compliance in a market where the stakes are high, the liability is real, and the tools are woefully inadequate. Association managers were tracking COI expiration dates in spreadsheets. Residents were calling contractors found on flyers, with no way to know if they were insured. And associations were discovering too late — after damage was done — that an approved vendor had let their insurance lapse months ago.</p>
               <p>ApprovedIn was built to solve exactly this problem. Not with a generic contractor marketplace, but with a system built from the ground up around Florida's community association ecosystem — its specific document requirements, its county-by-county vendor landscape, and the real daily pressures faced by managers, vendors, and residents alike.</p>
             </div>
           </div>
@@ -46,7 +46,7 @@ export default function About() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 { icon: "🛡️", title: "Compliance First", desc: "Every feature, every decision, every design choice revolves around keeping communities protected and vendors accountable." },
-                { icon: "🆓", title: "Free for Associations", desc: "The burden of vendor compliance has always been on associations. We're funded through vendor access fees — never association fees." },
+                { icon: "🆓", title: "Free for Associations", desc: "The burden of vendor compliance has historically fallen on associations. We're funded through vendor access fees — never association fees." },
                 { icon: "🏆", title: "Earned Access", desc: "Vendors earn their place in the directory by meeting association-specific requirements. There are no shortcuts." },
               ].map(v => (
                 <div key={v.title} className="bg-white rounded-2xl border border-sand-dark p-6 text-center">

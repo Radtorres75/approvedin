@@ -21,7 +21,7 @@ const FAQS = {
     { q: "What happens if my documents expire?", a: "You'll receive automated reminders at 90, 60, 30, and 7 days before expiration. If a document expires without renewal, your account is automatically suspended from all association directories. Upload a renewed document to begin the reinstatement process." },
   ],
   residents: [
-    { q: "Is ApprovedIn free for residents?", a: "Yes — always free for all residents. No credit card required." },
+    { q: "Is ApprovedIn free for residents?", a: "Yes — free for all residents. No credit card required." },
     { q: "How do I find my association?", a: "During signup, you can search for your condominium or homeowners association by name, city, or county. All active associations registered on ApprovedIn will appear in the search results." },
     { q: "What does 'Association-Approved' mean?", a: "It means the vendor has been reviewed and approved by your association, and their insurance and license documents are on file with ApprovedIn. It does not mean ApprovedIn has independently verified the documents." },
     { q: "Can I see all vendors in Florida, or just my association's?", a: "You can only see vendors that have been approved by your specific association. This ensures the directory reflects your community's specific standards and requirements." },

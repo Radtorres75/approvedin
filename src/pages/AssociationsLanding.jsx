@@ -31,14 +31,14 @@ export default function AssociationsLanding() {
         </div>
         <div className="relative max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-teal/10 border border-teal/20 text-teal text-sm font-medium px-4 py-1.5 rounded-full mb-6">
-            Always free for Florida associations
+            Free for Florida associations
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-6">
             Stop chasing vendor certificates.<br />
             <span className="text-teal">Start managing communities.</span>
           </h1>
           <p className="text-white/70 text-lg sm:text-xl max-w-2xl mx-auto mb-8 leading-relaxed">
-            ApprovedIn is free for community associations and managers — because the burden of vendor compliance has always been on you. We're here to change that.
+            ApprovedIn is free for community associations and managers — because the burden of vendor compliance has been on you long enough. We're here to change that.
           </p>
           <Link to="/onboarding" className="inline-flex items-center gap-2 bg-teal hover:bg-teal-dark text-navy font-bold text-base px-8 py-4 rounded-xl transition-colors">
             Create Your Free Account <ArrowRight size={18} />

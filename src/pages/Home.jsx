@@ -39,7 +39,7 @@ export default function Home() {
               cta: "Create Free Account",
               link: "/associations",
               image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=80",
-              badge: "Always Free",
+              badge: "Free",
               badgeColor: "bg-teal/10 text-teal-dark"
             },
             {
@@ -59,7 +59,7 @@ export default function Home() {
               cta: "Sign Up Free",
               link: "/residents",
               image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&q=80",
-              badge: "Always Free",
+              badge: "Free",
               badgeColor: "bg-teal/10 text-teal-dark"
             }].
             map((card) =>
