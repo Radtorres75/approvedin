@@ -14,9 +14,7 @@ export default function PublicFooter() {
                 style={{ height: "28px", width: "auto", objectFit: "contain", display: "block" }} />
               
             </div>
-            <p className="text-sm leading-relaxed">Stop chasing certificates.Start managing communities.
-
-            </p>
+            <p className="text-sm leading-relaxed">Compliance. Community.</p>
           </div>
           <div>
             <h4 className="text-white font-semibold text-sm mb-4">Platform</h4>
