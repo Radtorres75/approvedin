@@ -38,7 +38,7 @@ export default function Home() {
               desc: "Stop chasing vendor certificates. Build your approved vendor directory with full compliance tracking.",
               cta: "Create Free Account",
               link: "/associations",
-              image: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=600&q=80",
+              image: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=600&q=80",
               badge: "Free",
               badgeColor: "bg-teal/10 text-teal-dark"
             },
