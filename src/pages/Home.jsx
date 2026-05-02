@@ -38,7 +38,7 @@ export default function Home() {
               desc: "Stop chasing vendor certificates. Build your approved vendor directory with full compliance tracking.",
               cta: "Create Free Account",
               link: "/associations",
-              image: "https://images.unsplash.com/photo-1599427303058-f04cbcf4756f?w=600&q=80",
+              image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=80",
               badge: "Free",
               badgeColor: "bg-teal/10 text-teal-dark"
             },
@@ -69,7 +69,7 @@ export default function Home() {
               className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl border border-sand-dark transition-all duration-300 hover:-translate-y-1">
               
                 <div className="relative h-44 overflow-hidden">
-                  <img src={card.image} alt={card.title} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" />
+                  <img src={card.image} alt={card.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-navy/60 to-transparent" />
                   <span className="bg-teal/10 text-[hsl(var(--card))] px-2.5 py-1 text-xs font-semibold rounded-full absolute top-3 right-3">
                     {card.badge}
