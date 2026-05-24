@@ -75,6 +75,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithUser = (user) => {
+    setUser(user);
+    setIsAuthenticated(true);
+    setAuthChecked(true);
+    setAuthError(null);
+  };
+
   const logout = (shouldRedirect = true) => {
     setUser(null);
     setIsAuthenticated(false);
@@ -99,6 +106,7 @@ export const AuthProvider = ({ children }) => {
       authError,
       appPublicSettings,
       authChecked,
+      loginWithUser,
       logout,
       navigateToLogin,
       checkUserAuth,

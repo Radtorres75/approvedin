@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { ChevronRight } from "lucide-react";
 
 export default function SignIn() {
@@ -13,6 +14,7 @@ export default function SignIn() {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState("");
   const navigate = useNavigate();
+  const { loginWithUser } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -25,6 +27,9 @@ export default function SignIn() {
       if (!user) {
         throw new Error("Session could not be established. Please try again.");
       }
+
+      // Update auth context so ProtectedRoute sees the user before we navigate
+      loginWithUser(user);
 
       // Route by profile entity (most reliable — doesn't depend on role field)
       try {

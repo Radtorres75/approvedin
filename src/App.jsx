@@ -12,6 +12,7 @@ import AssociationsLanding from './pages/AssociationsLanding';
 import VendorsLanding from './pages/VendorsLanding';
 import ResidentsLanding from './pages/ResidentsLanding';
 import SignIn from './pages/SignIn';
+import RoleSelect from './pages/RoleSelect';
 import Pricing from './pages/Pricing';
 import About from './pages/About';
 import FAQ from './pages/FAQ';
@@ -86,6 +87,7 @@ const AuthenticatedApp = () => {
       <Route path="/vendors" element={<VendorsLanding />} />
       <Route path="/residents" element={<ResidentsLanding />} />
       <Route path="/signin" element={<SignIn />} />
+      <Route path="/role-select" element={<RoleSelect />} />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/about" element={<About />} />
       <Route path="/faq" element={<FAQ />} />
