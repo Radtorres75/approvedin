@@ -23,7 +23,14 @@ export default function Home() {
           <p className="text-[hsl(var(--card))] mb-10 mx-auto text-lg leading-relaxed sm:text-xl max-w-2xl">ApprovedIn automatically tracks vendor COIs, trade licenses, and corporate filings for Florida community associations — so you never have to chase paperwork again
 
           </p>
-          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link to="/role-select" className="inline-flex items-center gap-2 bg-teal hover:bg-teal-dark text-navy font-bold text-base px-8 py-4 rounded-xl transition-colors">
+              Get Started Free <ArrowRight size={18} />
+            </Link>
+            <Link to="/signin" className="text-white/70 hover:text-white text-sm font-medium transition-colors">
+              Already have an account? <span className="text-teal font-semibold">Log In</span>
+            </Link>
+          </div>
         </div>
       </section>
 
